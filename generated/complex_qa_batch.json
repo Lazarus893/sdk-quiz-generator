@@ -1,0 +1,342 @@
+[
+  {
+    "id": 1,
+    "type": "Complex QA",
+    "difficulty": "Medium",
+    "financial_concept": "Forward P/E Ratio",
+    "question": "What is Broadcom's (AVGO) forward P/E ratio, calculated using the FY2025 full-year consensus EPS estimate and the most recent closing price from the last trading days of December 2024?",
+    "solution_steps": [
+      "From query 1 (financial-estimates), extract `epsAvg` for AVGO FY2025",
+      "From query 2 (kline), find the most recent daily candle and extract its `price_close`",
+      "Calculate Forward P/E Ratio: price_close / epsAvg",
+      "A higher P/E indicates the market expects higher future growth; a lower P/E suggests lower growth expectations or undervaluation"
+    ],
+    "queries": [
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "AVGO",
+          "fiscal_year": 2025,
+          "fiscal_quarter": "FY"
+        }
+      },
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/kline",
+        "params": {
+          "ticker": "AVGO",
+          "start_time": 1735344000,
+          "end_time": 1735603200,
+          "interval": "1d",
+          "limit": 5
+        }
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "type": "Complex QA",
+    "difficulty": "Hard",
+    "financial_concept": "Volume-Weighted Average Price (VWAP)",
+    "question": "What was AMD's volume-weighted average price (VWAP) on January 15, 2025, using hourly candle data? Use the typical price — the average of high, low, and close — for each candle.",
+    "solution_steps": [
+      "From the kline response, collect all hourly candles for the trading day",
+      "For each candle, calculate typical price: TP = (price_high + price_low + price_close) / 3",
+      "For each candle, compute TP × volume_traded",
+      "Sum all (TP × volume_traded) values across the day",
+      "Sum all volume_traded values across the day",
+      "Calculate VWAP: sum(TP × volume_traded) / sum(volume_traded)"
+    ],
+    "queries": [
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/kline",
+        "params": {
+          "ticker": "AMD",
+          "start_time": 1736899200,
+          "end_time": 1736985600,
+          "interval": "1h",
+          "limit": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "type": "Complex QA",
+    "difficulty": "Medium",
+    "financial_concept": "Operating Margin Year-over-Year Change",
+    "question": "Compare Salesforce's (CRM) estimated operating margin for FY2024 vs FY2025 using full-year consensus estimates. By how many percentage points did the operating margin expand or contract year-over-year? (Use EBIT as the proxy for operating income.)",
+    "solution_steps": [
+      "From query 1 (FY2024), extract `ebitAvg` and `revenueAvg`",
+      "Calculate FY2024 operating margin: ebitAvg / revenueAvg × 100%",
+      "From query 2 (FY2025), extract `ebitAvg` and `revenueAvg`",
+      "Calculate FY2025 operating margin: ebitAvg / revenueAvg × 100%",
+      "Calculate margin change: FY2025_margin − FY2024_margin (in percentage points)",
+      "Positive = margin expansion (profitability improving); Negative = margin contraction"
+    ],
+    "queries": [
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "CRM",
+          "fiscal_year": 2024,
+          "fiscal_quarter": "FY"
+        }
+      },
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "CRM",
+          "fiscal_year": 2025,
+          "fiscal_quarter": "FY"
+        }
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "type": "Complex QA",
+    "difficulty": "Hard",
+    "financial_concept": "EPS Estimate Dispersion vs Price Volatility",
+    "question": "For Netflix (NFLX), compare the analyst EPS estimate range spread for FY2025 with the stock's price range spread during January 2025. Which shows more relative uncertainty — analyst disagreement on earnings, or the market's price action?",
+    "solution_steps": [
+      "From query 1 (financial-estimates), extract `epsHigh`, `epsLow`, and `epsAvg`",
+      "Calculate EPS range spread: (epsHigh − epsLow) / epsAvg × 100%",
+      "From query 2 (kline), find the highest `price_high` and lowest `price_low` across all daily candles",
+      "Calculate the average `price_close` over the period",
+      "Calculate price range spread: (max_price_high − min_price_low) / avg_price_close × 100%",
+      "Compare the two spreads — higher spread = more relative uncertainty"
+    ],
+    "queries": [
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "NFLX",
+          "fiscal_year": 2025,
+          "fiscal_quarter": "FY"
+        }
+      },
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/kline",
+        "params": {
+          "ticker": "NFLX",
+          "start_time": 1735689600,
+          "end_time": 1738281600,
+          "interval": "1d",
+          "limit": 31
+        }
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "type": "Complex QA",
+    "difficulty": "Hard",
+    "financial_concept": "Quarterly EPS Growth Trajectory",
+    "question": "Calculate Apple's (AAPL) quarter-over-quarter consensus EPS growth rate for each consecutive quarter in fiscal year 2024 (Q1→Q2, Q2→Q3, Q3→Q4). Is EPS growth accelerating or decelerating through the year?",
+    "solution_steps": [
+      "From each of the 4 quarterly queries, extract `epsAvg`",
+      "Calculate Q1→Q2 growth: (epsAvg_Q2 − epsAvg_Q1) / epsAvg_Q1 × 100%",
+      "Calculate Q2→Q3 growth: (epsAvg_Q3 − epsAvg_Q2) / epsAvg_Q2 × 100%",
+      "Calculate Q3→Q4 growth: (epsAvg_Q4 − epsAvg_Q3) / epsAvg_Q3 × 100%",
+      "Compare the three growth rates: if each is larger than the previous, EPS growth is accelerating; if each is smaller, it is decelerating; mixed signals indicate an uneven trajectory"
+    ],
+    "queries": [
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "AAPL",
+          "fiscal_year": 2024,
+          "fiscal_quarter": "Q1"
+        }
+      },
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "AAPL",
+          "fiscal_year": 2024,
+          "fiscal_quarter": "Q2"
+        }
+      },
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "AAPL",
+          "fiscal_year": 2024,
+          "fiscal_quarter": "Q3"
+        }
+      },
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "AAPL",
+          "fiscal_year": 2024,
+          "fiscal_quarter": "Q4"
+        }
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "type": "Complex QA",
+    "difficulty": "Hard",
+    "financial_concept": "Annualized Historical Volatility",
+    "question": "Calculate the annualized historical volatility for JPMorgan Chase (JPM) using daily closing prices from November 2024. Use the standard deviation of daily logarithmic returns, annualized by multiplying by √252.",
+    "solution_steps": [
+      "From the kline response, extract `price_close` from each daily candle, ordered by time_period_start ascending",
+      "Calculate daily log returns for each consecutive pair: r_i = ln(price_close_i / price_close_{i-1})",
+      "Calculate the mean of all daily log returns: mean_r = sum(r_i) / N",
+      "Calculate the sample standard deviation: σ = sqrt(sum((r_i − mean_r)²) / (N − 1))",
+      "Annualize the volatility: annualized_vol = σ × sqrt(252)",
+      "Express as a percentage (e.g., 0.25 = 25% annualized volatility)"
+    ],
+    "queries": [
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/kline",
+        "params": {
+          "ticker": "JPM",
+          "start_time": 1730419200,
+          "end_time": 1732924800,
+          "interval": "1d",
+          "limit": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "type": "Complex QA",
+    "difficulty": "Medium",
+    "financial_concept": "SGA Efficiency Comparison",
+    "question": "Compare the selling, general & administrative expense ratio (SGA/Revenue) for Amazon (AMZN) vs. Walmart (WMT) based on FY2025 full-year consensus estimates. Which company is expected to be more efficient in controlling overhead costs, and by how many percentage points?",
+    "solution_steps": [
+      "From query 1, extract `sgaExpenseAvg` and `revenueAvg` for AMZN FY2025",
+      "Calculate AMZN SGA ratio: sgaExpenseAvg / revenueAvg × 100%",
+      "From query 2, extract `sgaExpenseAvg` and `revenueAvg` for WMT FY2025",
+      "Calculate WMT SGA ratio: sgaExpenseAvg / revenueAvg × 100%",
+      "Calculate the efficiency gap: AMZN_ratio − WMT_ratio",
+      "Lower SGA ratio = more efficient at controlling overhead relative to revenue"
+    ],
+    "queries": [
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "AMZN",
+          "fiscal_year": 2025,
+          "fiscal_quarter": "FY"
+        }
+      },
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "WMT",
+          "fiscal_year": 2025,
+          "fiscal_quarter": "FY"
+        }
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "type": "Complex QA",
+    "difficulty": "Hard",
+    "financial_concept": "Incremental Margin (Revenue Drop-Through Rate)",
+    "question": "For Microsoft (MSFT), calculate the incremental net income margin from FY2024 to FY2025 — that is, what percentage of the additional revenue is expected to convert into additional net income? This measures how efficiently marginal revenue translates to bottom-line profit.",
+    "solution_steps": [
+      "From query 1 (FY2024), extract `revenueAvg` and `netIncomeAvg`",
+      "From query 2 (FY2025), extract `revenueAvg` and `netIncomeAvg`",
+      "Calculate incremental revenue: revenueAvg_2025 − revenueAvg_2024",
+      "Calculate incremental net income: netIncomeAvg_2025 − netIncomeAvg_2024",
+      "Calculate incremental margin (drop-through rate): incremental_netIncome / incremental_revenue × 100%",
+      "If incremental margin > overall FY2024 net margin, the company is improving profitability at the margin; if lower, each new dollar of revenue is less profitable"
+    ],
+    "queries": [
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "MSFT",
+          "fiscal_year": 2024,
+          "fiscal_quarter": "FY"
+        }
+      },
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "MSFT",
+          "fiscal_year": 2025,
+          "fiscal_quarter": "FY"
+        }
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "type": "Complex QA",
+    "difficulty": "Medium",
+    "financial_concept": "Average True Range Percentage (ATR%)",
+    "question": "What was the average weekly true range for Tesla (TSLA) during Q4 2024, expressed as a percentage of the average weekly closing price? This measures Tesla's typical weekly price swing relative to its stock price.",
+    "solution_steps": [
+      "From the kline response, iterate over all weekly candles for Q4 2024",
+      "For each candle, calculate the true range: TR = price_high − price_low",
+      "Calculate the Average True Range: ATR = sum(TR) / count(candles)",
+      "Calculate the average weekly closing price: avg_close = sum(price_close) / count(candles)",
+      "Calculate ATR%: ATR / avg_close × 100%",
+      "A higher ATR% means the stock has larger weekly price swings relative to its value"
+    ],
+    "queries": [
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/kline",
+        "params": {
+          "ticker": "TSLA",
+          "start_time": 1727740800,
+          "end_time": 1735603200,
+          "interval": "1w",
+          "limit": 14
+        }
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "type": "Complex QA",
+    "difficulty": "Hard",
+    "financial_concept": "PEG Ratio (Price/Earnings-to-Growth)",
+    "question": "Calculate NVIDIA's (NVDA) PEG ratio using: (1) the FY2025 consensus EPS estimate, (2) the EPS growth rate from FY2024 to FY2025, and (3) the average daily closing price during December 2024. A PEG ratio below 1.0 is generally considered undervalued relative to earnings growth.",
+    "solution_steps": [
+      "From query 1 (FY2024 financial-estimates), extract `epsAvg` for NVDA FY2024",
+      "From query 2 (FY2025 financial-estimates), extract `epsAvg` for NVDA FY2025",
+      "Calculate EPS growth rate: (epsAvg_2025 − epsAvg_2024) / epsAvg_2024 × 100",
+      "From query 3 (kline), calculate average daily closing price in December 2024: avg_close = sum(price_close) / count(candles)",
+      "Calculate Forward P/E: avg_close / epsAvg_2025",
+      "Calculate PEG Ratio: Forward_PE / EPS_growth_rate",
+      "PEG < 1 suggests the stock is undervalued relative to its growth; PEG > 1 suggests it may be overvalued relative to growth"
+    ],
+    "queries": [
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "NVDA",
+          "fiscal_year": 2024,
+          "fiscal_quarter": "FY"
+        }
+      },
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+        "params": {
+          "symbol": "NVDA",
+          "fiscal_year": 2025,
+          "fiscal_quarter": "FY"
+        }
+      },
+      {
+        "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/kline",
+        "params": {
+          "ticker": "NVDA",
+          "start_time": 1733011200,
+          "end_time": 1735603200,
+          "interval": "1d",
+          "limit": 31
+        }
+      }
+    ]
+  }
+]
