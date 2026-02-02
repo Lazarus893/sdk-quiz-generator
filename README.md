@@ -156,10 +156,24 @@ See **[PIPELINE.md](PIPELINE.md)** for complete architecture, components, and wo
   - Step-by-step workflow
   - Configuration and usage
   - Question diversity guidelines
+  - **Automated with GPT-5.2**
+
+- **[COMPLEX_QA_PIPELINE.md](COMPLEX_QA_PIPELINE.md)** - Complex QA generation workflow
+  - Multi-hop query patterns
+  - Calculation formulas
+  - Data requirement specification
+  - Answer structure guidelines
+  - **Manual generation (automation roadmap included)**
 
 - **[examples/unit_test_examples.md](examples/unit_test_examples.md)** - 8 diverse Unit Test examples
   - Varied symbols and query patterns
   - Edge cases and best practices
+
+- **[examples/complex_qa_examples.md](examples/complex_qa_examples.md)** - 8 Complex QA examples
+  - Multi-step calculations
+  - Cross-entity comparisons
+  - Time-series analysis
+  - Weighted averages and aggregations
 
 ## 🔧 Requirements
 

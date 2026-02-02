@@ -377,3 +377,18 @@ Structure:
 ```
 
 Ask the user if they need JSON format instead of Markdown.
+
+## Additional Resources
+
+### Unit Test Pipeline
+- **[PIPELINE.md](PIPELINE.md)** - Automated answer generation pipeline
+- **[examples/unit_test_examples.md](examples/unit_test_examples.md)** - 8 diverse Unit Test examples
+- **Script:** `scripts/generate_unit_test_answer.py` (automated with GPT-5.2)
+
+### Complex QA Pipeline
+- **[COMPLEX_QA_PIPELINE.md](COMPLEX_QA_PIPELINE.md)** - Multi-hop query workflow and patterns
+- **[examples/complex_qa_examples.md](examples/complex_qa_examples.md)** - 8 Complex QA examples with calculations
+- **Status:** Manual generation (automation roadmap included)
+
+### Trading Strategy
+- **Status:** Manual generation (no pipeline documentation yet)
