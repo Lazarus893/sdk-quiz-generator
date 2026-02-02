@@ -33,33 +33,37 @@ User: "Create Trading Strategy questions for the Financial Estimate API"
 Generate open-ended natural language questions in **three categories only**:
 
 ### 1. Unit Test Questions
-Test specific API functionality, parameter usage, and return values with focused questions.
+Single-point data queries asking for specific metrics or values. Do NOT mention APIs or data sources in the question.
 
 **Example:**
 ```
-Q: What parameters are required to fetch quarterly revenue estimates for AAPL using the Financial Estimate API?
+Q: What is BA's debt-to-asset ratio based on 2025 Q2 earnings?
 
-Standard Answer: The required parameters are `symbol` (set to "AAPL"), `metrics` (set to ["revenue"]), and `periodicity` (set to "quarterly"). The API also requires at least one of `observedAtStart`/`observedAtEnd` or `fiscalYear` to define the time range.
+Standard Answer: BA's debt-to-asset ratio for 2025 Q2 was 0.73, calculated from total debt of $58.2B divided by total assets of $79.8B as reported in their Q2 2025 earnings.
 ```
 
 ### 2. Complex QA Questions
-Test understanding of API combinations, data interpretation, and multi-step workflows.
+Multi-hop queries requiring multiple data points and calculations. Include specific requirements for data selection.
 
 **Example:**
 ```
-Q: How would you use the Financial Estimate and Guidance APIs together to determine if a company's guidance beat analyst expectations?
+Q: What was Apple's Free Cash Flow per Share for fiscal year 2025? Outstanding shares count should use the closest to its fiscal year-end date (September 30, 2025).
 
-Standard Answer: First, call the Guidance API with the company's symbol and fiscal period to get `guidanceMidpoint` and `meanBefore` fields. Compare these two values: if `guidanceMidpoint > meanBefore`, the guidance beat expectations. Alternatively, use the `meanSurpriseAmt` or `meanSurprisePct` fields directly, where positive values indicate guidance exceeded expectations.
+Standard Answer: Apple's Free Cash Flow per Share for fiscal year 2025 was $6.82. This is calculated by dividing the Free Cash Flow of $108.5B by the outstanding shares count of 15.9B as of September 30, 2025 (the closest date to fiscal year-end).
 ```
 
 ### 3. Trading Strategy Questions
-Test application of API data to real-world trading scenarios and decision-making.
+Real trading strategies with specific instruments, timeframes, entry/exit rules, and position management. Focus on signal identification, position sizing, and exit timing.
 
 **Example:**
 ```
-Q: Design a trading strategy that identifies stocks where analyst consensus is strengthening. Which APIs and parameters would you use, and what signals would trigger a buy decision?
+Q: Using BTCUSDT Perpetual Futures (Binance, UTC, 2025-11-10 to 2025-11-20): identify all days where Binance's BTCUSDT long/short ratio closes above 2. At the daily close of such days, open a 100% short position. Exit after 24 hours.
 
-Standard Answer: Use the Financial Estimate API with `observedAtStart` and `observedAtEnd` to track estimate changes over time. Monitor the `up` and `down` fields to track analyst revisions. A buy signal could trigger when: (1) `up / (up + down) > 0.7` (70%+ positive revisions), (2) `mean` is increasing over consecutive periods, and (3) `standardDeviation` is decreasing (increasing consensus). Combine with the Guidance API to confirm company guidance aligns with or exceeds the strengthening consensus.
+Standard Answer: During the specified period, the long/short ratio closed above 2 on 2025-11-12 (2.15), 2025-11-15 (2.31), and 2025-11-18 (2.08). 
+- Trade 1: Short at daily close 2025-11-12 23:59 UTC ($89,432), exit 2025-11-13 23:59 UTC ($87,210), profit: +2.48%
+- Trade 2: Short at daily close 2025-11-15 23:59 UTC ($91,820), exit 2025-11-16 23:59 UTC ($90,105), profit: +1.87%
+- Trade 3: Short at daily close 2025-11-18 23:59 UTC ($93,015), exit 2025-11-19 23:59 UTC ($94,330), loss: -1.41%
+Total strategy return: +2.94% over 3 trades.
 ```
 
 ## Question Generation Workflow
@@ -73,9 +77,9 @@ Standard Answer: Use the Financial Estimate API with `observedAtStart` and `obse
 **Step 2: Generate Question Pool**
 
 For each API, create a balanced mix:
-- **30-40% Unit Test questions** - Focused on specific API functionality
-- **30-40% Complex QA questions** - Multi-step workflows and data interpretation
-- **20-30% Trading Strategy questions** - Real-world application and decision-making
+- **30-40% Unit Test questions** - Single-point data queries (DO NOT mention APIs in question text)
+- **30-40% Complex QA questions** - Multi-hop calculations with specific data requirements
+- **20-30% Trading Strategy questions** - Concrete trading strategies with instruments, timeframes, signals, position sizing, and exit rules
 
 **Step 3: Format Output**
 
@@ -106,10 +110,11 @@ Present questions in clear, numbered format with standard answers:
 ## Best Practices
 
 **Question Quality:**
-- Use realistic parameter values and scenarios
-- Questions should be open-ended, requiring natural language answers
-- Provide complete standard answers with reasoning and explanation
-- Focus on practical application and understanding, not memorization
+- **Unit Test**: Ask for specific metrics/values directly. Never mention APIs or data sources.
+- **Complex QA**: Require multiple data points and calculations. Specify data selection criteria (e.g., "use closest date to...")
+- **Trading Strategy**: Include specific instruments, exchanges, timeframes, entry signals, position size, and exit rules
+- Provide complete standard answers with concrete numbers and step-by-step calculations
+- Use realistic data and actual market scenarios
 
 **Difficulty Levels:**
 
