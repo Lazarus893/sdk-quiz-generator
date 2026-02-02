@@ -148,10 +148,8 @@ If user chooses "mixed", ask for ratio (e.g., "40% easy, 40% medium, 20% hard") 
 - `unit_test_examples.md` - 8 diverse Unit Test examples (ETF country weightings)
 - `complex_qa_examples.md` - 10 diverse Complex QA examples with real gateway data
 
-**Generated output** (in `generated/`):
-- `complex_qa_batch.json` - 10 Complex QA questions (input for pipeline)
-- `complex_qa_with_answers.json` - Complete output with SDK responses + computed answers
-- `complex_qa_questions.md` - Human-readable question document
+**Pipeline input template** (in `generated/`):
+- `complex_qa_batch.json` - 10 Complex QA questions (input for batch pipeline script)
 
 Load these references to understand documentation format and generate similar questions for new SDK docs.
 
