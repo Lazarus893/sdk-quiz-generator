@@ -1,6 +1,6 @@
 ---
 name: sdk-quiz-generator
-description: Generate comprehensive test questions and quizzes from SDK documentation. Use when the user asks to create test questions, quiz problems, or assessment materials based on API documentation, SDK guides, or technical reference materials. Supports multiple question types including multiple-choice, code completion, scenario-based problems, and parameter validation questions.
+description: Generate comprehensive open-ended test questions from SDK documentation. Use when the user asks to create test questions, quiz problems, or assessment materials based on API documentation. Generates three types of natural language questions - Unit Test (specific API functionality), Complex QA (multi-step workflows), and Trading Strategy (real-world application scenarios).
 ---
 
 # SDK Quiz Generator
@@ -16,95 +16,50 @@ This skill transforms SDK documentation into structured test questions and quizz
 User: "Generate quiz questions from this SDK doc"
 → Read the SDK documentation
 → Analyze structure (API name, parameters, return values, examples)
-→ Generate 5-10 diverse question types
+→ Ask user for difficulty level (easy/medium/hard/mixed)
+→ Generate 5-10 questions across the three types: Unit Test, Complex QA, Trading Strategy
 ```
 
 **With specific focus:**
 ```
-User: "Create parameter validation questions for the Financial Estimate API"
-→ Focus on input parameters and validation logic
-→ Generate questions testing edge cases and required fields
+User: "Create Trading Strategy questions for the Financial Estimate API"
+→ Focus on real-world trading scenarios
+→ Generate questions about using the API for investment decisions
+→ Include standard answers with detailed reasoning
 ```
 
 ## Question Types
 
-Generate a mix of question types to comprehensively test understanding:
+Generate open-ended natural language questions in **three categories only**:
 
-### 1. Multiple Choice Questions (概念题)
-Test understanding of API purpose, parameter meanings, and return value interpretations.
-
-**Example:**
-```
-Q: What does the `periodicity` parameter in Financial Estimate API control?
-A) The fiscal year period
-B) The frequency of data updates (annual/quarterly)
-C) The number of estimates to return
-D) The standard deviation calculation method
-
-Answer: B
-```
-
-### 2. Code Completion Questions (代码填空)
-Test practical API usage by providing incomplete code snippets.
+### 1. Unit Test Questions
+Test specific API functionality, parameter usage, and return values with focused questions.
 
 **Example:**
 ```
-Q: Complete the following API call to fetch quarterly estimates for AAPL:
+Q: What parameters are required to fetch quarterly revenue estimates for AAPL using the Financial Estimate API?
 
-const response = await financialEstimate({
-  symbol: "AAPL",
-  ______: "quarterly",
-  observedAtStart: "2024-01-01"
-});
-
-Options: periodicity, frequency, timeframe, interval
-Answer: periodicity
+Standard Answer: The required parameters are `symbol` (set to "AAPL"), `metrics` (set to ["revenue"]), and `periodicity` (set to "quarterly"). The API also requires at least one of `observedAtStart`/`observedAtEnd` or `fiscalYear` to define the time range.
 ```
 
-### 3. Scenario-Based Questions (场景题)
-Test ability to apply API knowledge to real-world use cases.
+### 2. Complex QA Questions
+Test understanding of API combinations, data interpretation, and multi-step workflows.
 
 **Example:**
 ```
-Q: You need to compare analyst consensus estimates before and after an earnings call.
-Which combination of parameters would you use?
+Q: How would you use the Financial Estimate and Guidance APIs together to determine if a company's guidance beat analyst expectations?
 
-A) observedAtStart + observedAtEnd with the same date
-B) Two separate calls with different observedAt ranges
-C) Single call with guidanceMidpoint comparison
-D) Use prevMidpoint field in Guidance API
-
-Answer: B (Financial Estimate doesn't provide before/after comparison in one call)
+Standard Answer: First, call the Guidance API with the company's symbol and fiscal period to get `guidanceMidpoint` and `meanBefore` fields. Compare these two values: if `guidanceMidpoint > meanBefore`, the guidance beat expectations. Alternatively, use the `meanSurpriseAmt` or `meanSurprisePct` fields directly, where positive values indicate guidance exceeded expectations.
 ```
 
-### 4. Parameter Validation Questions (参数校验题)
-Test understanding of parameter constraints and validation rules.
+### 3. Trading Strategy Questions
+Test application of API data to real-world trading scenarios and decision-making.
 
 **Example:**
 ```
-Q: Which of the following API calls will fail validation?
+Q: Design a trading strategy that identifies stocks where analyst consensus is strengthening. Which APIs and parameters would you use, and what signals would trigger a buy decision?
 
-A) { symbol: "AAPL", periodicity: "quarterly" }
-B) { symbol: "AAPL", metrics: ["revenue"], limit: 0 }
-C) { symbol: "AAPL", fiscalYear: 2024 }
-D) { symbol: "", periodicity: "annual" }
-
-Answer: B and D (limit must be > 0, symbol cannot be empty)
-```
-
-### 5. Output Interpretation Questions (返回值理解题)
-Test understanding of response structure and field meanings.
-
-**Example:**
-```
-Q: If an API returns { estimateCount: 15, up: 8, down: 3 }, what can you conclude?
-
-A) 8 analysts revised estimates upward, 3 revised downward, 4 kept unchanged
-B) There are 15 total estimates with 8 positive and 3 negative values
-C) The estimate increased by 8 and decreased by 3 over time
-D) 8 estimates are above mean, 3 are below mean
-
-Answer: A
+Standard Answer: Use the Financial Estimate API with `observedAtStart` and `observedAtEnd` to track estimate changes over time. Monitor the `up` and `down` fields to track analyst revisions. A buy signal could trigger when: (1) `up / (up + down) > 0.7` (70%+ positive revisions), (2) `mean` is increasing over consecutive periods, and (3) `standardDeviation` is decreasing (increasing consensus). Combine with the Guidance API to confirm company guidance aligns with or exceeds the strengthening consensus.
 ```
 
 ## Question Generation Workflow
@@ -117,62 +72,61 @@ Answer: A
 
 **Step 2: Generate Question Pool**
 
-For each API, create at least:
-- 2-3 multiple choice questions (concept understanding)
-- 1-2 code completion questions (practical usage)
-- 1-2 scenario questions (real-world application)
-- 1-2 parameter validation questions (edge cases)
-- 1-2 output interpretation questions (response understanding)
+For each API, create a balanced mix:
+- **30-40% Unit Test questions** - Focused on specific API functionality
+- **30-40% Complex QA questions** - Multi-step workflows and data interpretation
+- **20-30% Trading Strategy questions** - Real-world application and decision-making
 
 **Step 3: Format Output**
 
-Present questions in clear, numbered format:
+Present questions in clear, numbered format with standard answers:
 
 ```markdown
 ## Quiz: [API Name]
 
-**Total Questions: 10 | Time: 15 minutes**
+**Total Questions: 10**
 
-### Question 1: [Type]
-[Question text]
+### Question 1: [Unit Test / Complex QA / Trading Strategy]
+[Question text in natural language]
 
-A) [Option A]
-B) [Option B]
-C) [Option C]
-D) [Option D]
-
-**Answer:** [Correct answer with brief explanation]
+**Standard Answer:**
+[Complete answer explaining the approach, required parameters, expected results, and reasoning]
 
 ---
 
 ### Question 2: [Type]
-...
+[Question text]
+
+**Standard Answer:**
+[Answer text]
+
+---
 ```
 
 ## Best Practices
 
 **Question Quality:**
 - Use realistic parameter values and scenarios
-- Avoid trick questions; test genuine understanding
-- Include "all of the above" / "none of the above" sparingly
-- Provide brief explanations with answers for learning
+- Questions should be open-ended, requiring natural language answers
+- Provide complete standard answers with reasoning and explanation
+- Focus on practical application and understanding, not memorization
 
 **Difficulty Levels:**
 
 Ask the user to choose difficulty level or mix:
-- **Easy**: Basic API usage, required parameter understanding, simple return value interpretation
-- **Medium**: Combining parameters, comparing multiple APIs, error handling scenarios
-- **Hard**: Edge cases, complex multi-step scenarios, performance optimization, architecture decisions
+- **Easy**: Basic API usage, single-API workflows, straightforward parameter combinations
+- **Medium**: Multi-API workflows, data interpretation, comparing results across timeframes
+- **Hard**: Complex trading strategies, edge case handling, performance optimization, multi-step decision trees
 
 **Example prompt:** "What difficulty level do you want? (easy/medium/hard/mixed)"
 
-If user chooses "mixed", ask for ratio (e.g., "50% easy, 30% medium, 20% hard") or use default balanced mix
+If user chooses "mixed", ask for ratio (e.g., "40% easy, 40% medium, 20% hard") or use default balanced mix
 
 **Coverage:**
-- Test all required parameters
-- Test at least 2-3 optional parameters per API
-- Include questions about error conditions
-- Test understanding of return value structure
+- Test all required parameters across Unit Test questions
+- Combine multiple APIs in Complex QA questions
+- Include realistic market scenarios in Trading Strategy questions
+- Cover edge cases and error handling
 
 ## Reference Materials
 
@@ -184,11 +138,24 @@ Load these references to understand documentation format and generate similar qu
 
 ## Output Format
 
-**Default format:** Markdown quiz with inline answers
+**Default format:** Markdown with question and standard answer pairs
 
-**Alternative formats available:**
-- JSON (for integration with quiz platforms)
-- CSV (for spreadsheet import)
-- Interactive HTML (with answer reveal on click)
+**Alternative format:**
+- JSON (for integration with quiz platforms or automated grading systems)
 
-Ask the user if they need a specific format.
+Structure:
+```json
+{
+  "quiz_name": "Financial Estimate API",
+  "questions": [
+    {
+      "id": 1,
+      "type": "Unit Test",
+      "question": "...",
+      "standard_answer": "..."
+    }
+  ]
+}
+```
+
+Ask the user if they need JSON format instead of Markdown.

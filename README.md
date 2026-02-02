@@ -4,12 +4,12 @@
 
 ## 🎯 What It Does
 
-Transforms API/SDK documentation into structured test questions covering:
-- Multiple-choice questions (概念题)
-- Code completion questions (代码填空)
-- Scenario-based problems (场景题)
-- Parameter validation questions (参数校验题)
-- Output interpretation questions (返回值理解题)
+Transforms API/SDK documentation into open-ended test questions covering:
+- **Unit Test questions** - Focused API functionality testing
+- **Complex QA questions** - Multi-step workflows and data interpretation
+- **Trading Strategy questions** - Real-world application scenarios
+
+All questions are natural language Q&A format with complete standard answers.
 
 ## 📦 Installation
 
@@ -45,9 +45,9 @@ Generate quiz questions from this SDK doc
 Input: Financial Estimate API documentation
 
 Output:
-- 10 comprehensive questions covering all API aspects
-- Multiple question types for complete understanding
-- Answers with explanations for learning
+- 10 comprehensive open-ended questions
+- Mix of Unit Test, Complex QA, and Trading Strategy questions
+- Complete standard answers with detailed reasoning and explanations
 
 ## 🔧 Skill Structure
 
@@ -65,7 +65,7 @@ See [SKILL.md](SKILL.md) for complete documentation on:
 - Question types and formats
 - Generation workflow
 - Best practices
-- Output format options (Markdown/JSON/CSV/HTML)
+- Output format options (Markdown/JSON)
 
 ## 🤝 Contributing
 
