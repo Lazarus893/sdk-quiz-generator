@@ -272,7 +272,10 @@ SOLVERS = {
 
 
 def main():
-    with open(sys.argv[1] if len(sys.argv) > 1 else "generated/complex_qa_batch.json") as f:
+    if len(sys.argv) < 2:
+        print("Usage: python3 run_complex_qa_batch.py <input.json>", file=sys.stderr)
+        sys.exit(1)
+    with open(sys.argv[1]) as f:
         questions = json.load(f)
 
     results = []
