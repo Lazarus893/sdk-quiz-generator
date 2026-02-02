@@ -107,9 +107,10 @@ Input JSON format:
 sdk-quiz-generator/
 ├── SKILL.md                                      # Skill definition (question types, workflow, pipelines)
 ├── PIPELINE.md                                   # Pipeline architecture (Unit Test + Complex QA)
+├── COMPLEX_QA_PIPELINE.md                        # Complex QA workflow patterns and guidelines
 ├── examples/
 │   ├── unit_test_examples.md                     # 8 Unit Test examples (ETF country weightings)
-│   └── complex_qa_examples.md                    # 10 Complex QA examples (real gateway data)
+│   └── complex_qa_examples.md                    # Complex QA examples with calculations
 ├── generated/
 │   └── complex_qa_batch.json                     # Batch input template (10 questions)
 ├── scripts/
@@ -126,6 +127,7 @@ sdk-quiz-generator/
 
 - **[SKILL.md](SKILL.md)** — Skill definition: question types, generation workflow, field reference, usage guide
 - **[PIPELINE.md](PIPELINE.md)** — Pipeline architecture: Unit Test and Complex QA answer generation
+- **[COMPLEX_QA_PIPELINE.md](COMPLEX_QA_PIPELINE.md)** — Complex QA workflow patterns and guidelines
 - **[examples/](examples/)** — Example questions with real answers for both question types
 
 ## Environment Variables
