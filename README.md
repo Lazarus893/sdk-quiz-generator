@@ -75,7 +75,7 @@ python3 scripts/generate_complex_qa_answer.py input.json
 
 **Batch execution (programmatic answers, no LLM needed):**
 ```bash
-python3 scripts/run_complex_qa_batch.py generated/complex_qa_batch.json \
+python3 scripts/run_complex_qa_batch.py batch_input.json \
   > output.json
 ```
 
@@ -106,28 +106,23 @@ Input JSON format:
 ```
 sdk-quiz-generator/
 ├── SKILL.md                                      # Skill definition (question types, workflow, pipelines)
-├── PIPELINE.md                                   # Pipeline architecture (Unit Test + Complex QA)
-├── COMPLEX_QA_PIPELINE.md                        # Complex QA workflow patterns and guidelines
 ├── examples/
 │   ├── unit_test_examples.md                     # 8 Unit Test examples (ETF country weightings)
 │   └── complex_qa_examples.md                    # Complex QA examples with calculations
-├── generated/
-│   └── complex_qa_batch.json                     # Batch input template (10 questions)
-├── scripts/
-│   ├── generate_unit_test_answer.py              # Unit Test: single question → LLM answer
-│   ├── generate_complex_qa_answer.py             # Complex QA: single question → LLM answer
-│   ├── run_complex_qa_batch.py                   # Complex QA: batch → programmatic answers
-│   └── sid_gateway_client.py                     # Generic gateway client
-└── references/
-    ├── createOHLCVProvider-example.md            # OHLCV API reference doc
-    └── financial-estimate-guidance-example.md    # Financial Estimates API reference doc
+└── scripts/
+    ├── PIPELINE.md                               # Pipeline architecture (Unit Test + Complex QA)
+    ├── COMPLEX_QA_PIPELINE.md                    # Complex QA workflow patterns and guidelines
+    ├── generate_unit_test_answer.py              # Unit Test: single question → LLM answer
+    ├── generate_complex_qa_answer.py             # Complex QA: single question → LLM answer
+    ├── run_complex_qa_batch.py                   # Complex QA: batch → programmatic answers
+    └── sid_gateway_client.py                     # Generic gateway client
 ```
 
 ## Documentation
 
 - **[SKILL.md](SKILL.md)** — Skill definition: question types, generation workflow, field reference, usage guide
-- **[PIPELINE.md](PIPELINE.md)** — Pipeline architecture: Unit Test and Complex QA answer generation
-- **[COMPLEX_QA_PIPELINE.md](COMPLEX_QA_PIPELINE.md)** — Complex QA workflow patterns and guidelines
+- **[scripts/PIPELINE.md](scripts/PIPELINE.md)** — Pipeline architecture: Unit Test and Complex QA answer generation
+- **[scripts/COMPLEX_QA_PIPELINE.md](scripts/COMPLEX_QA_PIPELINE.md)** — Complex QA workflow patterns and guidelines
 - **[examples/](examples/)** — Example questions with real answers for both question types
 
 ## Environment Variables

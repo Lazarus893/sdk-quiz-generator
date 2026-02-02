@@ -376,8 +376,8 @@ echo '{...}' | python3 scripts/generate_complex_qa_answer.py -
 **Option B: Batch execution with programmatic answers**
 ```bash
 # Run all questions, compute answers from real gateway data
-python3 scripts/run_complex_qa_batch.py generated/complex_qa_batch.json \
-  1> generated/complex_qa_with_answers.json \
+python3 scripts/run_complex_qa_batch.py batch_input.json \
+  1> output.json \
   2> run.log
 ```
 

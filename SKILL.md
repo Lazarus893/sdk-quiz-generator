@@ -140,16 +140,13 @@ If user chooses "mixed", ask for ratio (e.g., "40% easy, 40% medium, 20% hard") 
 
 ## Reference Materials
 
-**SDK documentation** (in `references/`):
-- `createOHLCVProvider-example.md` - OHLCV data provider API
-- `financial-estimate-guidance-example.md` - Financial estimate & guidance API
-
 **Example questions with answers** (in `examples/`):
 - `unit_test_examples.md` - 8 diverse Unit Test examples (ETF country weightings)
-- `complex_qa_examples.md` - 10 diverse Complex QA examples with real gateway data
+- `complex_qa_examples.md` - Complex QA examples with calculations
 
-**Pipeline input template** (in `generated/`):
-- `complex_qa_batch.json` - 10 Complex QA questions (input for batch pipeline script)
+**Pipeline documentation** (in `scripts/`):
+- `PIPELINE.md` - Unit Test and Complex QA answer generation pipeline
+- `COMPLEX_QA_PIPELINE.md` - Complex QA workflow patterns and guidelines
 
 Load these references to understand documentation format and generate similar questions for new SDK docs.
 
@@ -278,8 +275,8 @@ echo '{"question":"...","solution_steps":[...],"queries":[...]}' | \
 **Option B: Batch execution with programmatic answers (no LLM needed)**
 ```bash
 # Run all 10 questions, compute answers from real data
-python3 scripts/run_complex_qa_batch.py generated/complex_qa_batch.json \
-  > generated/complex_qa_with_answers.json
+python3 scripts/run_complex_qa_batch.py batch_input.json \
+  > output.json
 ```
 
 **Input JSON format (single question):**
@@ -379,14 +376,14 @@ Ask the user if they need JSON format instead of Markdown.
 ## Additional Resources
 
 ### Unit Test Pipeline
-- **[PIPELINE.md](PIPELINE.md)** - Automated answer generation pipeline
+- **[scripts/PIPELINE.md](scripts/PIPELINE.md)** - Automated answer generation pipeline
 - **[examples/unit_test_examples.md](examples/unit_test_examples.md)** - 8 diverse Unit Test examples
 - **Script:** `scripts/generate_unit_test_answer.py` (automated with GPT-5.2)
 
 ### Complex QA Pipeline
-- **[COMPLEX_QA_PIPELINE.md](COMPLEX_QA_PIPELINE.md)** - Multi-hop query workflow and patterns
-- **[examples/complex_qa_examples.md](examples/complex_qa_examples.md)** - 8 Complex QA examples with calculations
-- **Status:** Manual generation (automation roadmap included)
+- **[scripts/COMPLEX_QA_PIPELINE.md](scripts/COMPLEX_QA_PIPELINE.md)** - Multi-hop query workflow and patterns
+- **[examples/complex_qa_examples.md](examples/complex_qa_examples.md)** - Complex QA examples with calculations
+- **Script:** `scripts/run_complex_qa_batch.py` (programmatic answers, no LLM needed)
 
 ### Trading Strategy
 - **Status:** Manual generation (no pipeline documentation yet)
