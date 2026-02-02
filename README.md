@@ -61,11 +61,9 @@ sdk-quiz-generator/
 
 ## 📖 Documentation
 
-See [SKILL.md](SKILL.md) for complete documentation on:
-- Question types and formats
-- Generation workflow
-- Best practices
-- Output format options (Markdown/JSON)
+- **[SKILL.md](SKILL.md)** - Complete skill documentation (question types, workflow, best practices)
+- **[PIPELINE.md](PIPELINE.md)** - Unit Test answer generation pipeline (architecture, components, usage)
+- **[examples/unit_test_examples.md](examples/unit_test_examples.md)** - 8 diverse Unit Test examples with varied symbols and query patterns
 
 ## 🤝 Contributing
 

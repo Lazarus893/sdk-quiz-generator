@@ -81,6 +81,11 @@ For each API, create a balanced mix:
 - **30-40% Complex QA questions** - Multi-hop calculations with specific data requirements
 - **20-30% Trading Strategy questions** - Concrete trading strategies with instruments, timeframes, signals, position sizing, and exit rules
 
+**Important for Unit Test questions:**
+- **Vary the symbols/tickers** - Use different stocks/ETFs (e.g., QQQ, SPY, AAPL, MSFT, TSLA)
+- **Test different fields** - Don't just ask for the largest value; test specific countries, comparisons, counts, rankings
+- **Mix query patterns** - Single value lookup, comparisons, aggregations, edge cases
+
 **Step 3: Format Output**
 
 Present questions in clear, numbered format with standard answers:
@@ -141,6 +146,70 @@ See `references/` directory for example SDK documentation:
 
 Load these references to understand documentation format and generate similar questions for new SDK docs.
 
+## Unit Test Answer Generation Pipeline
+
+For **Unit Test questions**, we generate standard answers by calling the actual SDK:
+
+### Pipeline Steps
+
+```
+1. User provides SDK documentation
+   ↓
+2. Generate question + query parameters
+   Example: 
+   - Question: "What is SPY's largest country weighting?"
+   - Parameters: {"symbol": "SPY"}
+   ↓
+3. Call SDK gateway with parameters
+   (request_url provided by user, e.g., https://data-gateway.prd.space.id/api/v1/etf/country-weightings)
+   ↓
+4. Get SDK raw response
+   ↓
+5. Question + SDK response → GPT-5.2 → Natural language answer
+   ↓
+Final output:
+{
+  "question": "What is SPY's largest country weighting?",
+  "query_params": {"symbol": "SPY"},
+  "sdk_response": {...complete SDK response...},
+  "answer": "United States is SPY's largest country weighting at 97.38%."
+}
+```
+
+### Using the Script
+
+```bash
+# Set OpenAI API key (required)
+export OPENAI_API_KEY="sk-..."
+
+# Generate a single Unit Test with answer
+python3 scripts/generate_unit_test_answer.py \
+  "What is SPY's largest country weighting?" \
+  "https://data-gateway.prd.space.id/api/v1/etf/country-weightings" \
+  symbol=SPY
+```
+
+The script (`scripts/generate_unit_test_answer.py`) handles:
+- SDK gateway API calls with authentication
+- GPT-5.2 answer generation
+- Complete JSON output with all 4 components
+
+### Example Variations
+
+**Different tickers:**
+```bash
+symbol=QQQ  # Nasdaq 100
+symbol=SPY  # S&P 500
+symbol=IWM  # Russell 2000
+```
+
+**Different fields to test:**
+- Largest/smallest value: "What is QQQ's largest country weighting?"
+- Specific lookup: "What is the United Kingdom's weight percentage in SPY?"
+- Counting: "How many countries are represented in IWM's holdings?"
+- Ranking: "What are the top three countries by weighting in QQQ?"
+- Comparison: "What is the difference in weight percentage between Canada and Ireland in QQQ?"
+
 ## Output Format
 
 **Default format:** Markdown with question and standard answer pairs
@@ -157,7 +226,9 @@ Structure:
       "id": 1,
       "type": "Unit Test",
       "question": "...",
-      "standard_answer": "..."
+      "query_params": {...},
+      "sdk_response": {...},
+      "answer": "..."
     }
   ]
 }
