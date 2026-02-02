@@ -210,6 +210,82 @@ symbol=IWM  # Russell 2000
 - Ranking: "What are the top three countries by weighting in QQQ?"
 - Comparison: "What is the difference in weight percentage between Canada and Ireland in QQQ?"
 
+## Complex QA Answer Generation Pipeline
+
+For **Complex QA questions**, we generate standard answers by calling the SDK multiple times and performing calculations:
+
+### Pipeline Steps
+
+```
+1. User provides SDK documentation(s)
+   ↓
+2. Generate question + MULTIPLE query parameter sets
+   Example:
+   - Question: "What was AAPL's consensus EPS growth rate from Q1 to Q2 2024?"
+   - Query 1: {endpoint: financial-estimate, symbol: "AAPL", fiscalQuarter: 1, ...}
+   - Query 2: {endpoint: financial-estimate, symbol: "AAPL", fiscalQuarter: 2, ...}
+   ↓
+3. Generate solution steps (what to extract + how to calculate)
+   Example:
+   - Step 1: Extract mean EPS from Q1 response
+   - Step 2: Extract mean EPS from Q2 response
+   - Step 3: Calculate growth rate = (Q2 - Q1) / Q1 × 100%
+   ↓
+4. Call SDK gateway for EACH query set
+   ↓
+5. Get multiple SDK raw responses
+   ↓
+6. Question + solution steps + ALL responses → GPT-5.2 → Calculated answer
+   ↓
+Final output:
+{
+  "question": "What was AAPL's consensus EPS growth rate from Q1 to Q2 2024?",
+  "solution_steps": ["Extract Q1 mean EPS", "Extract Q2 mean EPS", "Calculate growth rate"],
+  "queries": [{...query1...}, {...query2...}],
+  "sdk_responses": [{...response1...}, {...response2...}],
+  "answer": "AAPL's EPS grew from $1.52 to $1.71, a growth rate of 12.5%."
+}
+```
+
+### Using the Script
+
+Complex QA uses JSON input due to its multi-query structure:
+
+```bash
+# Set OpenAI API key (required)
+export OPENAI_API_KEY="sk-..."
+
+# Generate from JSON file
+python3 scripts/generate_complex_qa_answer.py input.json
+
+# Generate from stdin
+echo '{"question":"...","solution_steps":[...],"queries":[...]}' | \
+  python3 scripts/generate_complex_qa_answer.py -
+```
+
+The script (`scripts/generate_complex_qa_answer.py`) handles:
+- Multiple SDK gateway API calls (one per query)
+- Solution steps passed to GPT-5.2 for guided calculation
+- GPT-5.2 answer generation with calculation work shown
+- Complete JSON output with all 5 components
+
+### Key Differences from Unit Test
+
+- **Multiple queries** per question (not just one)
+- **Solution steps** describe what to extract and how to calculate
+- **Answer requires computation** — not a direct data lookup
+- **Financial domain concepts** — growth rates, margins, ratios, CV, revision momentum
+- **Higher token limit** (800 vs 500) for GPT-5.2 to show calculation work
+
+### Example Calculation Types
+
+- **Growth rate:** `(new - old) / old × 100%`
+- **Profitability ratio:** `netIncome / revenue × 100%`
+- **Consensus strength (CV):** `standardDeviation / mean × 100%`
+- **Guidance surprise:** `(guidanceMidpoint - meanBefore) / meanBefore × 100%`
+- **Revision ratio:** `upRevisions / (upRevisions + downRevisions) × 100%`
+- **Range spread:** `(high - low) / mean × 100%`
+
 ## Output Format
 
 **Default format:** Markdown with question and standard answer pairs
@@ -228,6 +304,15 @@ Structure:
       "question": "...",
       "query_params": {...},
       "sdk_response": {...},
+      "answer": "..."
+    },
+    {
+      "id": 2,
+      "type": "Complex QA",
+      "question": "...",
+      "solution_steps": ["Step 1: ...", "Step 2: ...", "Step 3: ..."],
+      "queries": [{"request_url": "...", "params": {...}}, ...],
+      "sdk_responses": [{...}, ...],
       "answer": "..."
     }
   ]
