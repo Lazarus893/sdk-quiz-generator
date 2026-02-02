@@ -1,251 +1,238 @@
 # Complex QA Question Examples
 
 This file demonstrates diverse Complex QA questions that require multi-hop queries and calculations.
+All answers are computed from live gateway data.
 
-## Example 1: EPS Growth Rate (Cross-Quarter Comparison)
-
-**Question:** What was AAPL's consensus EPS growth rate from Q1 2024 to Q2 2024?
-
-**Queries:**
-```json
-[
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/financial-estimate",
-    "params": {"symbol": "AAPL", "metrics": "eps", "fiscalYear": 2024, "fiscalQuarter": 1, "periodicity": "quarterly"}
-  },
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/financial-estimate",
-    "params": {"symbol": "AAPL", "metrics": "eps", "fiscalYear": 2024, "fiscalQuarter": 2, "periodicity": "quarterly"}
-  }
-]
-```
-
-**Solution Steps:**
-1. From query 1, extract the `mean` EPS for AAPL Q1 2024
-2. From query 2, extract the `mean` EPS for AAPL Q2 2024
-3. Calculate growth rate: `(Q2_mean - Q1_mean) / Q1_mean × 100%`
-
-**Answer:** AAPL's consensus EPS grew from $1.52 (Q1 2024) to $1.71 (Q2 2024), a growth rate of 12.5%.
+**Gateway endpoints used:**
+- Kline: `https://data-gateway.prd.space.id/api/v1/stocks/kline`
+- Financial Estimates: `https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates`
 
 ---
 
-## Example 2: Guidance vs Consensus Surprise (Beat/Miss Analysis)
+## Example 1: Forward P/E Ratio (AVGO) — Cross-API
 
-**Question:** For MSFT's fiscal year 2024 Q3 revenue, did the company's guidance beat or miss analyst consensus? By how much in both absolute and percentage terms?
+**Question:** What is Broadcom's (AVGO) forward P/E ratio, calculated using the FY2025 full-year consensus EPS estimate and the most recent closing price from the last trading days of December 2024?
 
 **Queries:**
 ```json
 [
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/guidance",
-    "params": {"symbol": "MSFT", "metrics": "revenue", "fiscalYear": 2024, "fiscalQuarter": 3}
-  }
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "AVGO", "fiscal_year": 2025, "fiscal_quarter": "FY"}},
+  {"request_url": ".../stocks/kline", "params": {"ticker": "AVGO", "start_time": 1735344000, "end_time": 1735603200, "interval": "1d", "limit": 5}}
 ]
 ```
 
 **Solution Steps:**
-1. From the guidance response, extract `guidanceMidpoint` (company's guidance)
-2. Extract `meanBefore` (analyst consensus before guidance was issued)
-3. Calculate absolute surprise: `guidanceMidpoint - meanBefore`
-4. Calculate percentage surprise: `(guidanceMidpoint - meanBefore) / meanBefore × 100%`
-5. If positive → beat; if negative → miss
+1. From financial-estimates, extract `epsAvg` for AVGO FY2025
+2. From kline, find the most recent candle's `price_close`
+3. Calculate: Forward P/E = price_close / epsAvg
 
-**Answer:** MSFT's Q3 2024 revenue guidance midpoint was $61.5B vs analyst consensus of $60.2B before guidance. The company beat consensus by $1.3B (+2.16%).
+**Answer:** AVGO FY2025 consensus epsAvg = $6.74825. Most recent closing price (2024-12-30): $235.58. Forward P/E = $235.58 / $6.74825 = **34.91x**.
 
 ---
 
-## Example 3: Analyst Consensus Dispersion (Agreement Strength)
+## Example 2: Volume-Weighted Average Price (AMD) — Hourly Kline
 
-**Question:** Compare the analyst consensus strength for NVDA vs INTC on fiscal year 2025 annual EPS estimates. Which stock has more analyst agreement?
+**Question:** What was AMD's volume-weighted average price (VWAP) on January 15, 2025, using hourly candle data? Use the typical price — the average of high, low, and close — for each candle.
 
 **Queries:**
 ```json
 [
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/financial-estimate",
-    "params": {"symbol": "NVDA", "metrics": "eps", "fiscalYear": 2025, "periodicity": "annual"}
-  },
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/financial-estimate",
-    "params": {"symbol": "INTC", "metrics": "eps", "fiscalYear": 2025, "periodicity": "annual"}
-  }
+  {"request_url": ".../stocks/kline", "params": {"ticker": "AMD", "start_time": 1736899200, "end_time": 1736985600, "interval": "1h", "limit": 50}}
 ]
 ```
 
 **Solution Steps:**
-1. From query 1, extract NVDA's `mean` and `standardDeviation` for EPS
-2. From query 2, extract INTC's `mean` and `standardDeviation` for EPS
-3. Calculate Coefficient of Variation for each: `CV = (standardDeviation / mean) × 100%`
-4. Lower CV = stronger consensus (analysts agree more closely)
-5. Compare the two CV values
+1. For each hourly candle: TP = (price_high + price_low + price_close) / 3
+2. For each candle: compute TP × volume_traded
+3. VWAP = Σ(TP × volume_traded) / Σ(volume_traded)
 
-**Answer:** NVDA's EPS estimate has a mean of $2.85 with std dev of $0.12 (CV = 4.2%), while INTC's mean is $1.05 with std dev of $0.31 (CV = 29.5%). NVDA has much stronger analyst consensus — analysts are far more aligned on NVDA's earnings outlook than INTC's.
+**Answer:** AMD hourly candles: 17 candles, total volume 33,572,182. VWAP = **$119.1549**.
 
 ---
 
-## Example 4: Guidance Revision Trend (Quarter-over-Quarter Change)
+## Example 3: Operating Margin YoY Change (CRM) — Cross-Year
 
-**Question:** How did TSLA's revenue guidance midpoint change from Q1 2024 to Q2 2024? Is the company raising or lowering expectations?
+**Question:** Compare Salesforce's (CRM) estimated operating margin for FY2024 vs FY2025 using full-year consensus estimates. By how many percentage points did the operating margin expand or contract year-over-year? (Use EBIT as proxy for operating income.)
 
 **Queries:**
 ```json
 [
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/guidance",
-    "params": {"symbol": "TSLA", "metrics": "revenue", "fiscalYear": 2024, "fiscalQuarter": 1}
-  },
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/guidance",
-    "params": {"symbol": "TSLA", "metrics": "revenue", "fiscalYear": 2024, "fiscalQuarter": 2}
-  }
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "CRM", "fiscal_year": 2024, "fiscal_quarter": "FY"}},
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "CRM", "fiscal_year": 2025, "fiscal_quarter": "FY"}}
 ]
 ```
 
 **Solution Steps:**
-1. From query 1, extract Q1 2024 `guidanceMidpoint` for revenue
-2. From query 2, extract Q2 2024 `guidanceMidpoint` for revenue
-3. Calculate absolute change: `Q2_midpoint - Q1_midpoint`
-4. Calculate percentage change: `(Q2_midpoint - Q1_midpoint) / Q1_midpoint × 100%`
-5. Positive change = raising expectations; negative = lowering
+1. FY2024 operating margin = ebitAvg / revenueAvg × 100%
+2. FY2025 operating margin = ebitAvg / revenueAvg × 100%
+3. Margin change = FY2025_margin − FY2024_margin
 
-**Answer:** TSLA's revenue guidance midpoint increased from $25.2B (Q1 2024) to $26.8B (Q2 2024), a +$1.6B increase (+6.35%). Tesla is raising revenue expectations quarter-over-quarter.
+**Answer:** CRM FY2024: ebitAvg=$3.47B, revenueAvg=$36.47B, margin=9.52%. FY2025: ebitAvg=$3.61B, revenueAvg=$37.96B, margin=9.52%. Year-over-year margin change: **-0.00 percentage points** (flat).
 
 ---
 
-## Example 5: Estimate Momentum (Revision Ratio)
+## Example 4: EPS Dispersion vs Price Volatility (NFLX) — Cross-API
 
-**Question:** What is the analyst estimate revision ratio for AMZN's fiscal year 2025 annual revenue? Are analysts becoming more bullish or bearish?
+**Question:** For Netflix (NFLX), compare the analyst EPS estimate range spread for FY2025 with the stock's price range spread during January 2025. Which shows more relative uncertainty?
 
 **Queries:**
 ```json
 [
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/financial-estimate",
-    "params": {"symbol": "AMZN", "metrics": "revenue", "fiscalYear": 2025, "periodicity": "annual"}
-  }
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "NFLX", "fiscal_year": 2025, "fiscal_quarter": "FY"}},
+  {"request_url": ".../stocks/kline", "params": {"ticker": "NFLX", "start_time": 1735689600, "end_time": 1738281600, "interval": "1d", "limit": 31}}
 ]
 ```
 
 **Solution Steps:**
-1. From the response, extract `up` (number of upward revisions) and `down` (number of downward revisions)
-2. Calculate revision ratio: `up / (up + down) × 100%`
-3. Ratio > 50% → bullish momentum; ratio < 50% → bearish momentum
-4. Also note total `estimateCount` for context
+1. EPS spread = (epsHigh − epsLow) / epsAvg × 100%
+2. Price spread = (max price_high − min price_low) / avg price_close × 100%
+3. Compare the two spreads
 
-**Answer:** For AMZN's FY2025 revenue, 18 analysts revised upward and 4 revised downward, giving a revision ratio of 81.8% (18/22). Analysts are strongly bullish — over 4x more upgrades than downgrades.
+**Answer:** NFLX EPS range spread = (2.695 − 2.543) / 2.563 = **5.93%**. Price range spread = (99.90 − 82.35) / 90.16 = **19.46%**. Market price action shows more relative uncertainty.
 
 ---
 
-## Example 6: Price Volatility vs Estimate Range (Cross-API)
+## Example 5: Quarterly EPS Growth Trajectory (AAPL) — 4 Quarters
 
-**Question:** For GOOGL, compare the analyst estimate range spread for FY2025 annual EPS with the stock's recent 30-day price range. Which shows more relative uncertainty?
+**Question:** Calculate Apple's (AAPL) quarter-over-quarter consensus EPS growth rate for each consecutive quarter in fiscal year 2024 (Q1→Q2, Q2→Q3, Q3→Q4). Is EPS growth accelerating or decelerating through the year?
 
 **Queries:**
 ```json
 [
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/financial-estimate",
-    "params": {"symbol": "GOOGL", "metrics": "eps", "fiscalYear": 2025, "periodicity": "annual"}
-  },
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/ohlcv",
-    "params": {"symbol": "GOOGL", "interval": "1d", "startDate": "2024-12-01", "endDate": "2024-12-31", "dataSource": "yahoo"}
-  }
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "AAPL", "fiscal_year": 2024, "fiscal_quarter": "Q1"}},
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "AAPL", "fiscal_year": 2024, "fiscal_quarter": "Q2"}},
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "AAPL", "fiscal_year": 2024, "fiscal_quarter": "Q3"}},
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "AAPL", "fiscal_year": 2024, "fiscal_quarter": "Q4"}}
 ]
 ```
 
 **Solution Steps:**
-1. From query 1, extract EPS `high`, `low`, and `mean`
-2. Calculate estimate range spread: `(high - low) / mean × 100%`
-3. From query 2, find the highest `high` and lowest `low` across all daily candles
-4. Calculate the average `close` over the period
-5. Calculate price range spread: `(max_high - min_low) / avg_close × 100%`
-6. Compare the two spreads — higher spread = more relative uncertainty
+1. Extract epsAvg from each quarter
+2. Calculate Q1→Q2, Q2→Q3, Q3→Q4 growth rates
+3. If each rate > previous → accelerating; each < previous → decelerating
 
-**Answer:** GOOGL's EPS estimate range spread is ($8.20 - $7.10) / $7.65 = 14.4%. The 30-day price range spread is ($182 - $168) / $175 = 8.0%. Analyst estimates show relatively more dispersion (14.4%) than the stock's price movement (8.0%), suggesting more uncertainty in earnings outlook than in near-term price action.
+**Answer:** Q1=$2.101, Q2=$1.505, Q3=$1.346, Q4=$1.600. Q1→Q2: **-28.35%**, Q2→Q3: **-10.60%**, Q3→Q4: **+18.94%**. EPS growth is accelerating (decline narrowing, then turning positive).
 
 ---
 
-## Example 7: Guidance Accuracy (Guidance vs Actual Consensus Shift)
+## Example 6: Annualized Historical Volatility (JPM) — Daily Log Returns
 
-**Question:** For META's Q2 2024 EBITDA, how much did analyst consensus shift after the company issued guidance? Calculate the "guidance pull" effect.
+**Question:** Calculate the annualized historical volatility for JPMorgan Chase (JPM) using daily closing prices from November 2024. Use the standard deviation of daily logarithmic returns, annualized by multiplying by √252.
 
 **Queries:**
 ```json
 [
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/guidance",
-    "params": {"symbol": "META", "metrics": "ebitda", "fiscalYear": 2024, "fiscalQuarter": 2}
-  }
+  {"request_url": ".../stocks/kline", "params": {"ticker": "JPM", "start_time": 1730419200, "end_time": 1732924800, "interval": "1d", "limit": 30}}
 ]
 ```
 
 **Solution Steps:**
-1. From the response, extract `meanBefore` (consensus before guidance)
-2. Extract `meanAfter` (consensus after guidance)
-3. Extract `guidanceMidpoint` (the company's guidance)
-4. Calculate consensus shift: `meanAfter - meanBefore`
-5. Calculate "guidance pull" percentage: `(meanAfter - meanBefore) / (guidanceMidpoint - meanBefore) × 100%`
-   - 100% = analysts fully converged to guidance; 0% = analysts ignored guidance
+1. Extract price_close from each daily candle (ascending order)
+2. Calculate daily log returns: r_i = ln(close_i / close_{i-1})
+3. Calculate sample standard deviation: σ = √(Σ(r_i − mean)² / (N−1))
+4. Annualize: σ × √252
 
-**Answer:** META's Q2 2024 EBITDA: meanBefore = $18.5B, meanAfter = $19.8B, guidanceMidpoint = $20.2B. Consensus shifted +$1.3B after guidance. Guidance pull = $1.3B / $1.7B = 76.5% — analysts moved roughly three-quarters of the way toward META's guidance, indicating strong but not complete trust in management's outlook.
+**Answer:** JPM November 2024: 21 trading days, 20 daily log returns. Mean daily log return: 0.005901. Daily σ = 0.027666. **Annualized volatility = 43.92%**.
 
 ---
 
-## Example 8: Multi-Metric Profitability Ratio (Cross-Metric Calculation)
+## Example 7: SGA Efficiency Comparison (AMZN vs WMT) — Cross-Symbol
 
-**Question:** Based on FY2025 annual consensus estimates for AAPL, what is the estimated net profit margin (net income / revenue)?
+**Question:** Compare the selling, general & administrative expense ratio (SGA/Revenue) for Amazon (AMZN) vs. Walmart (WMT) based on FY2025 full-year consensus estimates. Which company is expected to be more efficient in controlling overhead costs, and by how many percentage points?
 
 **Queries:**
 ```json
 [
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/financial-estimate",
-    "params": {"symbol": "AAPL", "metrics": "netIncome", "fiscalYear": 2025, "periodicity": "annual"}
-  },
-  {
-    "request_url": "https://data-gateway.prd.space.id/api/v1/financial-estimate",
-    "params": {"symbol": "AAPL", "metrics": "revenue", "fiscalYear": 2025, "periodicity": "annual"}
-  }
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "AMZN", "fiscal_year": 2025, "fiscal_quarter": "FY"}},
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "WMT", "fiscal_year": 2025, "fiscal_quarter": "FY"}}
 ]
 ```
 
 **Solution Steps:**
-1. From query 1, extract the `mean` net income estimate
-2. From query 2, extract the `mean` revenue estimate
-3. Calculate net profit margin: `mean_netIncome / mean_revenue × 100%`
+1. AMZN SGA ratio = sgaExpenseAvg / revenueAvg × 100%
+2. WMT SGA ratio = sgaExpenseAvg / revenueAvg × 100%
+3. Compare: lower ratio = more efficient
 
-**Answer:** AAPL's FY2025 estimated net income is $105.2B and estimated revenue is $412.8B. Estimated net profit margin = $105.2B / $412.8B = 25.5%.
+**Answer:** AMZN SGA ratio = $64.6B / $714.7B = **9.04%**. WMT SGA ratio = $140.1B / $680.5B = **20.58%**. AMZN is more efficient by **11.54 percentage points**.
+
+---
+
+## Example 8: Incremental Margin / Drop-Through Rate (MSFT) — Cross-Year
+
+**Question:** For Microsoft (MSFT), calculate the incremental net income margin from FY2024 to FY2025 — what percentage of the additional revenue is expected to convert into additional net income?
+
+**Queries:**
+```json
+[
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "MSFT", "fiscal_year": 2024, "fiscal_quarter": "FY"}},
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "MSFT", "fiscal_year": 2025, "fiscal_quarter": "FY"}}
+]
+```
+
+**Solution Steps:**
+1. Incremental revenue = revenueAvg_2025 − revenueAvg_2024
+2. Incremental net income = netIncomeAvg_2025 − netIncomeAvg_2024
+3. Incremental margin = incremental_NI / incremental_rev × 100%
+4. Compare with FY2024 overall margin to assess operating leverage
+
+**Answer:** FY2024 revenue=$244.9B, NI=$90.5B (margin 36.95%). FY2025 revenue=$279.2B, NI=$100.2B. Incremental rev=$34.3B, incremental NI=$9.7B. **Incremental margin = 28.39%** — below the 36.95% overall margin, indicating diminishing returns on incremental revenue.
+
+---
+
+## Example 9: Weekly ATR% (TSLA) — Weekly Kline
+
+**Question:** What was the average weekly true range for Tesla (TSLA) during Q4 2024, expressed as a percentage of the average weekly closing price?
+
+**Queries:**
+```json
+[
+  {"request_url": ".../stocks/kline", "params": {"ticker": "TSLA", "start_time": 1727740800, "end_time": 1735603200, "interval": "1w", "limit": 14}}
+]
+```
+
+**Solution Steps:**
+1. For each weekly candle: TR = price_high − price_low
+2. ATR = Σ(TR) / count(candles)
+3. avg_close = Σ(price_close) / count(candles)
+4. ATR% = ATR / avg_close × 100%
+
+**Answer:** TSLA Q4 2024: 14 weekly candles. ATR = $45.62. Average weekly close = $331.07. **ATR% = 13.78%**.
+
+---
+
+## Example 10: PEG Ratio (NVDA) — Cross-API + Cross-Year
+
+**Question:** Calculate NVIDIA's (NVDA) PEG ratio using: (1) the FY2025 consensus EPS estimate, (2) the EPS growth rate from FY2024 to FY2025, and (3) the average daily closing price during December 2024. A PEG below 1.0 is generally considered undervalued relative to earnings growth.
+
+**Queries:**
+```json
+[
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "NVDA", "fiscal_year": 2024, "fiscal_quarter": "FY"}},
+  {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "NVDA", "fiscal_year": 2025, "fiscal_quarter": "FY"}},
+  {"request_url": ".../stocks/kline", "params": {"ticker": "NVDA", "start_time": 1733011200, "end_time": 1735603200, "interval": "1d", "limit": 31}}
+]
+```
+
+**Solution Steps:**
+1. EPS growth = (epsAvg_2025 − epsAvg_2024) / epsAvg_2024 × 100
+2. avg_close from December 2024 kline
+3. Forward P/E = avg_close / epsAvg_2025
+4. PEG = Forward_PE / EPS_growth_rate
+
+**Answer:** FY2024 epsAvg=$2.152, FY2025 epsAvg=$2.952. EPS growth = **37.17%**. Dec 2024 avg close = $137.37 (20 days). Forward P/E = 46.53x. **PEG = 1.25** — market is paying a premium above the growth rate.
 
 ---
 
 ## Key Variations Demonstrated
 
-1. **Calculation types:**
-   - Growth rate (Example 1)
-   - Beat/miss analysis with absolute and percentage (Example 2)
-   - Coefficient of Variation / consensus strength (Example 3)
-   - Quarter-over-quarter change (Example 4)
-   - Revision ratio (Example 5)
-   - Cross-API range comparison (Example 6)
-   - Guidance pull effect (Example 7)
-   - Multi-metric profitability ratio (Example 8)
-
+1. **Calculation types:** Forward P/E, VWAP, operating margin change, range spread comparison, sequential growth trajectory, annualized volatility, SGA efficiency ratio, incremental margin, ATR%, PEG ratio
 2. **Query patterns:**
-   - Same endpoint, different quarters (Examples 1, 4)
-   - Single query with derived fields (Examples 2, 5, 7)
-   - Same endpoint, different symbols (Example 3)
-   - Cross-API queries (Example 6)
-   - Same endpoint, different metrics (Example 8)
-
-3. **Financial concepts:**
-   - EPS growth rate
-   - Guidance surprise (beat/miss)
-   - Coefficient of Variation (consensus dispersion)
-   - Guidance revision trend
-   - Estimate momentum / revision ratio
-   - Price vs estimate uncertainty
-   - Guidance pull effect
-   - Net profit margin
-
-4. **Symbols used:** AAPL, MSFT, NVDA, INTC, TSLA, AMZN, GOOGL, META
+   - Cross-API: kline + financial-estimates (Examples 1, 4, 10)
+   - Cross-year: same symbol, different fiscal_year (Examples 3, 8)
+   - Cross-symbol: different symbols, same period (Example 7)
+   - Cross-quarter: 4 quarters in one fiscal year (Example 5)
+   - Single-query complex derivation (Examples 2, 6, 9)
+3. **Kline intervals used:** 1h (Example 2), 1d (Examples 1, 4, 6, 10), 1w (Example 9)
+4. **Financial estimate fields used:** epsAvg/High/Low, revenueAvg, ebitAvg, netIncomeAvg, sgaExpenseAvg
+5. **Symbols used:** AVGO, AMD, CRM, NFLX, AAPL, JPM, AMZN, WMT, MSFT, TSLA, NVDA
+6. **Difficulty:** 4 Medium / 6 Hard

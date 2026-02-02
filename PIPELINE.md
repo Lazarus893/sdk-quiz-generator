@@ -303,21 +303,21 @@ python3 scripts/generate_unit_test_answer.py \
 | Answer type | Direct lookup | Requires calculation |
 | Solution steps | Not needed | Required |
 | Output fields | 4 (question, params, response, answer) | 5 (+ solution_steps) |
-| Financial concepts | Basic data retrieval | Derived metrics (ratios, growth, margins) |
+| Financial concepts | Basic data retrieval | Derived metrics (P/E, VWAP, margins, volatility, PEG) |
 
 ### Components
 
 #### 1. Question Generator
 
 Generates questions that **cannot be answered by a single data lookup**. Each question requires:
-- Data from multiple queries OR multiple fields
+- Data from multiple queries OR multiple fields within one response
 - Mathematical calculation (growth rate, ratio, comparison, etc.)
 - Clear data selection criteria in the question text
 
 **Question diversity dimensions:**
-- **Calculation types:** growth rate, ratio, percentage comparison, absolute difference, aggregation
-- **Query patterns:** cross-quarter, cross-symbol, cross-metric, cross-API
-- **Financial concepts:** profit margin, EPS growth, consensus dispersion (CV), guidance surprise, revision momentum
+- **Calculation types:** P/E, VWAP, margin change, growth rate, volatility, ATR%, PEG ratio, range spread
+- **Query patterns:** cross-API (kline + financial-estimates), cross-year, cross-quarter, cross-symbol
+- **Financial concepts:** valuation multiples, institutional benchmarks, profitability margins, risk metrics
 
 #### 2. Solution Step Generator
 
@@ -328,29 +328,41 @@ Produces step-by-step instructions that describe:
 
 Example:
 ```
-1. From query 1, extract the `mean` EPS for Q1 2024
-2. From query 2, extract the `mean` EPS for Q2 2024
-3. Calculate growth rate: (Q2_mean - Q1_mean) / Q1_mean × 100%
+1. From query 1, extract `epsAvg` for Q1 2024
+2. From query 2, extract `epsAvg` for Q2 2024
+3. Calculate growth rate: (epsAvg_Q2 − epsAvg_Q1) / epsAvg_Q1 × 100%
 ```
 
 #### 3. Multi-Query SDK Gateway Client
 
 Executes multiple gateway calls sequentially, collecting responses in order.
 
-**Script location:** `scripts/generate_complex_qa_answer.py`
+**Scripts:**
+- `scripts/generate_complex_qa_answer.py` — Single question, LLM answer (requires OPENAI_API_KEY)
+- `scripts/run_complex_qa_batch.py` — Batch execution, programmatic answers (no LLM needed)
 
-#### 4. Answer Generator (GPT-5.2)
+#### 4. Answer Generator
 
-Same model as Unit Test but with enhanced prompt:
+**Option A: GPT-5.2 (LLM)**
 - Receives all SDK responses + solution steps
 - Shows calculation work (extracted values + formula)
-- Temperature: 0.1 (factual)
-- Max tokens: 800 (higher than Unit Test due to calculation details)
+- Temperature: 0.1, max tokens: 800
 
-### Using the Script
+**Option B: Programmatic calculation**
+- Each question has a dedicated solver function
+- Computes answers directly from SDK response fields
+- No external API dependency
 
-Complex QA uses JSON input (file or stdin) due to the multi-query structure:
+### Gateway Endpoints
 
+| API | Endpoint | Key Params |
+|-----|----------|------------|
+| **Kline (OHLCV)** | `/api/v1/stocks/kline` | `ticker`, `start_time` (unix), `end_time` (unix), `interval` (1h/1d/1w), `limit` |
+| **Financial Estimates** | `/api/v1/stocks/financial-estimates` | `symbol`, `fiscal_year`, `fiscal_quarter` (Q1/Q2/Q3/Q4/FY) |
+
+### Using the Scripts
+
+**Option A: Single question with LLM answer**
 ```bash
 export OPENAI_API_KEY="sk-..."
 
@@ -361,83 +373,125 @@ python3 scripts/generate_complex_qa_answer.py input.json
 echo '{...}' | python3 scripts/generate_complex_qa_answer.py -
 ```
 
-**Input JSON format:**
+**Option B: Batch execution with programmatic answers**
+```bash
+# Run all questions, compute answers from real gateway data
+python3 scripts/run_complex_qa_batch.py generated/complex_qa_batch.json \
+  1> generated/complex_qa_with_answers.json \
+  2> run.log
+```
+
+**Input JSON format (single question):**
 ```json
 {
   "question": "What was AAPL's consensus EPS growth rate from Q1 to Q2 2024?",
   "solution_steps": [
-    "From query 1, extract the mean EPS for Q1 2024",
-    "From query 2, extract the mean EPS for Q2 2024",
-    "Calculate growth rate: (Q2_mean - Q1_mean) / Q1_mean × 100%"
+    "From query 1, extract epsAvg for Q1 2024",
+    "From query 2, extract epsAvg for Q2 2024",
+    "Calculate growth rate: (epsAvg_Q2 − epsAvg_Q1) / epsAvg_Q1 × 100%"
   ],
   "queries": [
     {
-      "request_url": "https://data-gateway.prd.space.id/api/v1/financial-estimate",
-      "params": {"symbol": "AAPL", "metrics": "eps", "fiscalYear": 2024, "fiscalQuarter": 1, "periodicity": "quarterly"}
+      "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+      "params": {"symbol": "AAPL", "fiscal_year": 2024, "fiscal_quarter": "Q1"}
     },
     {
-      "request_url": "https://data-gateway.prd.space.id/api/v1/financial-estimate",
-      "params": {"symbol": "AAPL", "metrics": "eps", "fiscalYear": 2024, "fiscalQuarter": 2, "periodicity": "quarterly"}
+      "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+      "params": {"symbol": "AAPL", "fiscal_year": 2024, "fiscal_quarter": "Q2"}
     }
   ]
 }
 ```
 
+**Batch input JSON format (array of questions):**
+```json
+[
+  {
+    "id": 1,
+    "type": "Complex QA",
+    "difficulty": "Medium",
+    "financial_concept": "Forward P/E Ratio",
+    "question": "...",
+    "solution_steps": ["...", "..."],
+    "queries": [{"request_url": "...", "params": {...}}, ...]
+  },
+  ...
+]
+```
+
 **Output JSON format:**
 ```json
 {
-  "question": "What was AAPL's consensus EPS growth rate from Q1 to Q2 2024?",
-  "solution_steps": [
-    "From query 1, extract the mean EPS for Q1 2024",
-    "From query 2, extract the mean EPS for Q2 2024",
-    "Calculate growth rate: (Q2_mean - Q1_mean) / Q1_mean × 100%"
-  ],
+  "id": 1,
+  "type": "Complex QA",
+  "difficulty": "Medium",
+  "financial_concept": "Forward P/E Ratio",
+  "question": "What is AVGO's forward P/E ratio ...?",
+  "solution_steps": ["Extract epsAvg", "Extract price_close", "Calculate P/E"],
   "queries": [
-    {"request_url": "...", "params": {...}},
-    {"request_url": "...", "params": {...}}
+    {"request_url": ".../stocks/financial-estimates", "params": {"symbol": "AVGO", "fiscal_year": 2025, "fiscal_quarter": "FY"}},
+    {"request_url": ".../stocks/kline", "params": {"ticker": "AVGO", "start_time": 1735344000, "end_time": 1735603200, "interval": "1d", "limit": 5}}
   ],
-  "sdk_responses": [
-    {...complete response 1...},
-    {...complete response 2...}
-  ],
-  "answer": "AAPL's consensus EPS grew from $1.52 (Q1 2024) to $1.71 (Q2 2024), a growth rate of 12.5%. Calculation: ($1.71 - $1.52) / $1.52 × 100% = 12.5%."
+  "sdk_responses": [{...complete response 1...}, {...complete response 2...}],
+  "answer": "AVGO FY2025 epsAvg = $6.748. Most recent close: $235.58. Forward P/E = 34.91x"
 }
 ```
+
+### Response Field Reference
+
+**Financial Estimates** (all metrics in a single response):
+- `epsAvg`, `epsHigh`, `epsLow` — Earnings per share consensus
+- `revenueAvg`, `revenueHigh`, `revenueLow` — Revenue consensus
+- `ebitdaAvg`, `ebitdaHigh`, `ebitdaLow` — EBITDA consensus
+- `ebitAvg`, `ebitHigh`, `ebitLow` — EBIT (operating income) consensus
+- `netIncomeAvg`, `netIncomeHigh`, `netIncomeLow` — Net income consensus
+- `sgaExpenseAvg`, `sgaExpenseHigh`, `sgaExpenseLow` — SGA expense consensus
+- `numAnalystsRevenue`, `numAnalystsEps` — Analyst coverage count
+- `calendarEndDate` — Fiscal period end date
+
+**Kline** (per candle):
+- `price_open`, `price_high`, `price_low`, `price_close` — OHLC prices
+- `volume_traded` — Trading volume
+- `trades_count` — Number of trades
+- `time_period_start`, `time_period_end` — ISO timestamps
+- `time_open`, `time_close` — Unix timestamps
 
 ### Question Diversity Guidelines
 
 #### Calculation Types
-1. **Growth rate:** `(new - old) / old × 100%` (cross-quarter, cross-year)
-2. **Beat/miss analysis:** `guidance - consensus` (absolute + percentage)
-3. **Coefficient of Variation:** `stdDev / mean × 100%` (consensus strength)
-4. **Revision ratio:** `up / (up + down) × 100%` (estimate momentum)
-5. **Profitability ratio:** `netIncome / revenue × 100%` (cross-metric)
-6. **Range spread:** `(high - low) / mean × 100%` (uncertainty measure)
-7. **Guidance pull:** `(meanAfter - meanBefore) / (guidance - meanBefore) × 100%`
+1. **Forward P/E:** `price_close / epsAvg`
+2. **VWAP:** `Σ(TP × volume) / Σ(volume)`, TP = (H+L+C)/3
+3. **Operating margin:** `ebitAvg / revenueAvg × 100%`
+4. **EPS growth rate:** `(epsAvg_new − epsAvg_old) / epsAvg_old × 100%`
+5. **Range spread:** `(high − low) / avg × 100%`
+6. **Annualized volatility:** `stdev(ln_returns) × √252`
+7. **SGA ratio:** `sgaExpenseAvg / revenueAvg × 100%`
+8. **Incremental margin:** `Δ_netIncome / Δ_revenue × 100%`
+9. **ATR%:** `mean(price_high − price_low) / mean(price_close) × 100%`
+10. **PEG ratio:** `(price / epsAvg) / EPS_growth_rate`
 
 #### Query Patterns
-1. **Same endpoint, different quarters** — e.g., Q1 vs Q2 EPS
-2. **Same endpoint, different symbols** — e.g., NVDA vs INTC consensus
-3. **Same endpoint, different metrics** — e.g., netIncome + revenue → margin
-4. **Cross-API** — e.g., financial-estimate + OHLCV → price vs estimate range
-5. **Single query, derived fields** — e.g., guidance response has both meanBefore and meanAfter
+1. **Cross-API** — kline + financial-estimates (e.g., Forward P/E, PEG ratio)
+2. **Cross-year** — same symbol, different fiscal_year (e.g., margin YoY)
+3. **Cross-quarter** — same symbol, Q1/Q2/Q3/Q4 (e.g., EPS trajectory)
+4. **Cross-symbol** — different symbols, same period (e.g., AMZN vs WMT)
+5. **Single query, complex derivation** — VWAP, volatility, ATR from kline
 
 #### Symbol Variation
-- **Mega-cap tech:** AAPL, MSFT, GOOGL, AMZN, META, NVDA
+- **Mega-cap tech:** AAPL, MSFT, AMZN, NVDA, AVGO
 - **Growth stocks:** TSLA, AMD, CRM, NFLX
-- **Value/cyclical:** JPM, BAC, XOM, CVX
-- **Compared pairs:** NVDA vs INTC, AAPL vs MSFT, AMZN vs WMT
+- **Value/cyclical:** JPM, WMT
+- **Compared pairs:** AMZN vs WMT, HD vs COST
 
 ### Testing Checklist
 
-- [ ] Script accepts JSON input from file
-- [ ] Script accepts JSON input from stdin
-- [ ] All queries execute and responses are collected
-- [ ] Error in one query doesn't crash the pipeline
-- [ ] GPT-5.2 answer shows calculation work
-- [ ] Answer includes specific numbers from responses
-- [ ] Solution steps match the actual calculation performed
-- [ ] Questions require genuine multi-step reasoning
+- [x] Batch script fetches all gateway responses
+- [x] All 10 questions produce correct answers from live data
+- [x] Error in one query doesn't crash the pipeline
+- [x] Answers include specific numbers from responses
+- [x] Solution steps match the actual calculation performed
+- [x] Questions require genuine multi-step reasoning
+- [ ] Single-question LLM script accepts JSON input from file/stdin
 
 ---
 
