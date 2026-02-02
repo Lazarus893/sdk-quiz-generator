@@ -140,9 +140,18 @@ If user chooses "mixed", ask for ratio (e.g., "40% easy, 40% medium, 20% hard") 
 
 ## Reference Materials
 
-See `references/` directory for example SDK documentation:
-- `createOHLCVProvider-example.md` - Data provider API example
-- `financial-estimate-guidance-example.md` - Financial data API examples
+**SDK documentation** (in `references/`):
+- `createOHLCVProvider-example.md` - OHLCV data provider API
+- `financial-estimate-guidance-example.md` - Financial estimate & guidance API
+
+**Example questions with answers** (in `examples/`):
+- `unit_test_examples.md` - 8 diverse Unit Test examples (ETF country weightings)
+- `complex_qa_examples.md` - 10 diverse Complex QA examples with real gateway data
+
+**Generated output** (in `generated/`):
+- `complex_qa_batch.json` - 10 Complex QA questions (input for pipeline)
+- `complex_qa_with_answers.json` - Complete output with SDK responses + computed answers
+- `complex_qa_questions.md` - Human-readable question document
 
 Load these references to understand documentation format and generate similar questions for new SDK docs.
 
@@ -210,6 +219,130 @@ symbol=IWM  # Russell 2000
 - Ranking: "What are the top three countries by weighting in QQQ?"
 - Comparison: "What is the difference in weight percentage between Canada and Ireland in QQQ?"
 
+## Complex QA Answer Generation Pipeline
+
+For **Complex QA questions**, we generate standard answers by calling the SDK multiple times and performing calculations.
+
+### Gateway Endpoints
+
+| API | Endpoint | Key Params |
+|-----|----------|------------|
+| Kline (OHLCV) | `/api/v1/stocks/kline` | `ticker`, `start_time` (unix), `end_time` (unix), `interval` (1h/1d/1w), `limit` |
+| Financial Estimates | `/api/v1/stocks/financial-estimates` | `symbol`, `fiscal_year`, `fiscal_quarter` (Q1/Q2/Q3/Q4/FY) |
+
+### Pipeline Steps
+
+```
+1. User provides SDK documentation(s)
+   ↓
+2. Generate question + MULTIPLE query parameter sets
+   Example:
+   - Question: "What was AAPL's consensus EPS growth rate from Q1 to Q2 2024?"
+   - Query 1: {endpoint: /stocks/financial-estimates, symbol: "AAPL", fiscal_quarter: "Q1"}
+   - Query 2: {endpoint: /stocks/financial-estimates, symbol: "AAPL", fiscal_quarter: "Q2"}
+   ↓
+3. Generate solution steps (what to extract + how to calculate)
+   Example:
+   - Step 1: Extract epsAvg from Q1 response
+   - Step 2: Extract epsAvg from Q2 response
+   - Step 3: Calculate growth rate = (Q2 - Q1) / Q1 × 100%
+   ↓
+4. Call SDK gateway for EACH query set
+   ↓
+5. Get multiple SDK raw responses
+   ↓
+6. Compute answer (programmatic calculation or GPT-5.2 generation)
+   ↓
+Final output:
+{
+  "question": "...",
+  "solution_steps": [...],
+  "queries": [{...query1...}, {...query2...}],
+  "sdk_responses": [{...response1...}, {...response2...}],
+  "answer": "AAPL's EPS declined from $2.10 (Q1) to $1.51 (Q2), a change of -28.35%."
+}
+```
+
+### Using the Scripts
+
+**Option A: Single question with LLM answer (requires OpenAI key)**
+```bash
+export OPENAI_API_KEY="sk-..."
+
+# From JSON file
+python3 scripts/generate_complex_qa_answer.py input.json
+
+# From stdin
+echo '{"question":"...","solution_steps":[...],"queries":[...]}' | \
+  python3 scripts/generate_complex_qa_answer.py -
+```
+
+**Option B: Batch execution with programmatic answers (no LLM needed)**
+```bash
+# Run all 10 questions, compute answers from real data
+python3 scripts/run_complex_qa_batch.py generated/complex_qa_batch.json \
+  > generated/complex_qa_with_answers.json
+```
+
+**Input JSON format (single question):**
+```json
+{
+  "question": "What was AAPL's consensus EPS growth rate from Q1 to Q2 2024?",
+  "solution_steps": [
+    "From query 1, extract epsAvg for Q1 2024",
+    "From query 2, extract epsAvg for Q2 2024",
+    "Calculate growth rate: (epsAvg_Q2 − epsAvg_Q1) / epsAvg_Q1 × 100%"
+  ],
+  "queries": [
+    {
+      "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+      "params": {"symbol": "AAPL", "fiscal_year": 2024, "fiscal_quarter": "Q1"}
+    },
+    {
+      "request_url": "https://data-gateway.prd.space.id/api/v1/stocks/financial-estimates",
+      "params": {"symbol": "AAPL", "fiscal_year": 2024, "fiscal_quarter": "Q2"}
+    }
+  ]
+}
+```
+
+### Key Differences from Unit Test
+
+- **Multiple queries** per question (not just one)
+- **Solution steps** describe what to extract and how to calculate
+- **Answer requires computation** — not a direct data lookup
+- **Financial domain concepts** — growth rates, margins, ratios, volatility, PEG
+
+### Response Field Reference
+
+**Financial Estimates** (all returned in one query):
+- `epsAvg`, `epsHigh`, `epsLow` — Earnings per share
+- `revenueAvg`, `revenueHigh`, `revenueLow` — Revenue
+- `ebitdaAvg`, `ebitdaHigh`, `ebitdaLow` — EBITDA
+- `ebitAvg`, `ebitHigh`, `ebitLow` — EBIT (operating income)
+- `netIncomeAvg`, `netIncomeHigh`, `netIncomeLow` — Net income
+- `sgaExpenseAvg`, `sgaExpenseHigh`, `sgaExpenseLow` — SGA expense
+- `numAnalystsRevenue`, `numAnalystsEps` — Analyst count
+
+**Kline** (per candle):
+- `price_open`, `price_high`, `price_low`, `price_close` — OHLC prices
+- `volume_traded` — Volume
+- `time_period_start`, `time_period_end` — ISO timestamp
+- `time_open`, `time_close` — Unix timestamp
+
+### Example Calculation Types
+
+- **Forward P/E:** `price_close / epsAvg`
+- **VWAP:** `Σ(TP × volume) / Σ(volume)`, where TP = (H+L+C)/3
+- **Operating margin:** `ebitAvg / revenueAvg × 100%`
+- **EPS growth rate:** `(epsAvg_new − epsAvg_old) / epsAvg_old × 100%`
+- **Range spread:** `(high − low) / avg × 100%`
+- **Annualized volatility:** `stdev(ln_returns) × √252`
+- **SGA ratio:** `sgaExpenseAvg / revenueAvg × 100%`
+- **Incremental margin:** `Δ_netIncome / Δ_revenue × 100%`
+- **ATR%:** `mean(price_high − price_low) / mean(price_close) × 100%`
+- **PEG ratio:** `(price / epsAvg) / EPS_growth_rate`
+
 ## Output Format
 
 **Default format:** Markdown with question and standard answer pairs
@@ -228,6 +361,15 @@ Structure:
       "question": "...",
       "query_params": {...},
       "sdk_response": {...},
+      "answer": "..."
+    },
+    {
+      "id": 2,
+      "type": "Complex QA",
+      "question": "...",
+      "solution_steps": ["Step 1: ...", "Step 2: ...", "Step 3: ..."],
+      "queries": [{"request_url": "...", "params": {...}}, ...],
+      "sdk_responses": [{...}, ...],
       "answer": "..."
     }
   ]
