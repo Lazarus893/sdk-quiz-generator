@@ -47,6 +47,46 @@ python3 scripts/generate_complex_qa_answer.py batch.json --batch --no-llm
 
 See `scripts/PIPELINE.md` for input JSON format.
 
+## Pipeline Architecture
+
+```mermaid
+graph LR
+    subgraph Unit_Test["Unit Test Pipeline"]
+        A1["User provides SDK doc"] --> A2["Generate question + query params"]
+        A2 --> A3["Call SDK Gateway API"]
+        A3 --> A4["GPT-5.2 generates answer"]
+        A4 --> A5["Output JSON"]
+    end
+
+    subgraph Complex_QA["Complex QA Pipeline"]
+        B1["User provides SDK docs"] --> B2["Generate question + MULTIPLE query params"]
+        B2 --> B3["Generate solution steps"]
+        B3 --> B4["Multiple SDK Gateway Calls (并行)"]
+        B4 --> B5["GPT-5.2 / programmatic calculation"]
+        B5 --> B6["Output JSON"]
+    end
+
+    style A1 fill:#e7f5ff,stroke:#1971c2
+    style A2 fill:#e7f5ff,stroke:#1971c2
+    style A3 fill:#e7f5ff,stroke:#1971c2
+    style A4 fill:#e7f5ff,stroke:#1971c2
+    style A5 fill:#c8e6c9,stroke:#1971c2
+    style B1 fill:#fff4e1,stroke:#f76707
+    style B2 fill:#fff4e1,stroke:#f76707
+    style B3 fill:#fff4e1,stroke:#f76707
+    style B4 fill:#ffe8cc,stroke:#f76707
+    style B5 fill:#ffe8cc,stroke:#f76707
+    style B6 fill:#c8e6c9,stroke:#f76707
+```
+
+### Key Differences
+
+| Aspect | Unit Test | Complex QA |
+|--------|-----------|------------|
+| Queries per question | 1 | 1-N (multiple parallel) |
+| Answer type | Direct lookup | Calculation required |
+| Solution steps | Not needed | Required |
+
 ## Project Structure
 
 ```

@@ -6,74 +6,82 @@ Guidelines for generating diverse, high-quality quiz questions.
 
 ## Unit Test Guidelines
 
-### Symbol Variation
+### API Categories
 
-Use different ETFs/stocks to avoid repetition:
+| Category | APIs |
+|----------|------|
+| Financials | `getCompanyIncomeStatements`, `getCompanyBalanceStatements`, `getCompanyCashFlowStatements` |
+| Price | `getStockKline`, `getCryptoKline`, `getETFKline`, `getFuturePrice` |
+| Holdings | `getInsiderTrades`, `getSenatorTrades`, `getInstitutionOwnershipAnalytics` |
+| Macro | `getHistoricalEconomicIndicator` (CPI, GDP, Unemployment, Fed Funds) |
+| Events | `getDividendEvent`, `getSplitEvent`, `getEarningsCalendarData` |
+| Crypto-specific | `getExchangeNetflow`, `getFundingRate`, `getOpenInterest`, `getLongShortRatio` |
 
-| Category | Symbols |
-|----------|---------|
-| Broad market | SPY, VTI, VOO |
-| Tech/Growth | QQQ, ARKK, VGT |
-| Small cap | IWM, VB |
-| International | EEM, VEA, VWO |
-| Sector-specific | XLF, XLE, XLK |
+### Question Patterns
 
-### Field Testing Patterns
+1. **Date-specific value:** "What was ETH's opening price on Aug 12, 2025?"
+2. **Financial ratio:** "What is AAPL's gross margin based on 2025 Q2 earnings?"
+3. **Multi-metric:** "What is MSFT's operating margin and net margin for 2025 Q2?"
+4. **Yes/No check:** "Did US announce CPI data on Aug 14, 2025?"
+5. **Existence:** "Did TSLA have an insider transaction on Sep 11, 2025?"
+6. **Period aggregate:** "How many shares of NVDA did Senator X purchase in Q3 2025?"
 
-1. **Largest value:** "What is [symbol]'s largest country weighting?"
-2. **Smallest value:** "What is [symbol]'s smallest non-zero country weighting?"
-3. **Specific lookup:** "What is [country]'s weight percentage in [symbol]?"
-4. **Count:** "How many countries are represented in [symbol]'s holdings?"
-5. **Ranking:** "What are the top N countries by weighting in [symbol]?"
-6. **Comparison:** "What is the difference between [country1] and [country2] in [symbol]?"
-7. **Presence check:** "Does [symbol] have exposure to [country]?"
-8. **Aggregation:** "What is the combined weight of [region] countries in [symbol]?"
+### Common Formulas
 
-### Edge Cases
-
-- Zero values vs non-zero
-- Excluding "Other" category
-- Handling missing countries
-- Percentage format parsing
-- Decimal precision
+| Ratio | Formula |
+|-------|---------|
+| Gross Margin | `(Revenue - COGS) / Revenue` |
+| Operating Margin | `Operating Income / Revenue` |
+| Net Margin | `Net Income / Revenue` |
+| Current Ratio | `Current Assets / Current Liabilities` |
+| Debt-to-Asset | `Total Debt / Total Assets` |
 
 ---
 
 ## Complex QA Guidelines
 
-### Calculation Types
+### Calculation Categories
 
-| # | Calculation | Formula |
-|---|-------------|---------|
-| 1 | Forward P/E | `price_close / epsAvg` |
-| 2 | VWAP | `Σ(TP × volume) / Σ(volume)`, TP = (H+L+C)/3 |
-| 3 | Operating margin | `ebitAvg / revenueAvg × 100%` |
-| 4 | EPS growth rate | `(epsAvg_new − epsAvg_old) / epsAvg_old × 100%` |
-| 5 | Range spread | `(high − low) / avg × 100%` |
-| 6 | Annualized volatility | `stdev(ln_returns) × √252` |
-| 7 | SGA ratio | `sgaExpenseAvg / revenueAvg × 100%` |
-| 8 | Incremental margin | `Δ_netIncome / Δ_revenue × 100%` |
-| 9 | ATR% | `mean(price_high − price_low) / mean(price_close) × 100%` |
-| 10 | PEG ratio | `(price / epsAvg) / EPS_growth_rate` |
+**Risk & Return:**
+| Metric | Formula |
+|--------|---------|
+| Sharpe Ratio | `(Mean Return − Rf) / StdDev × √252` |
+| Sortino Ratio | `(Mean Return − Rf) / Downside StdDev × √252` |
+| Max Drawdown | `(Trough − Peak) / Peak` |
+| CAGR | `(End/Start)^(1/n) − 1` |
+
+**Technical:**
+| Metric | Formula |
+|--------|---------|
+| VWAP | `Σ(TP × Vol) / Σ(Vol)`, TP = (H+L+C)/3 |
+| ATR% | `mean(H−L) / mean(C) × 100%` |
+| RSI | 14-day relative strength index |
+| Volatility | `stdev(ln_returns) × √252` |
+
+**Fundamental:**
+| Metric | Formula |
+|--------|---------|
+| Forward P/E | `Price / EPS_estimate` |
+| PEG | `P/E / EPS_growth_rate` |
+| FCF per Share | `FCF / Outstanding Shares` |
+| DuPont ROE | `Net Margin × Asset Turnover × Leverage` |
+
+**Trading:**
+| Metric | Formula |
+|--------|---------|
+| Position Size | `(Equity × MaxLoss%) / (Entry − StopLoss)` |
+| Risk/Reward | `(Target − Entry) / (Entry − StopLoss)` |
+| Margin Call | Solve `(Shares × P − Loan) / (Shares × P) = Maintenance%` |
 
 ### Query Patterns
 
-| Pattern | Description | Example |
-|---------|-------------|---------|
-| Cross-API | kline + financial-estimates | Forward P/E, PEG ratio |
-| Cross-year | same symbol, different fiscal_year | margin YoY |
-| Cross-quarter | same symbol, Q1/Q2/Q3/Q4 | EPS trajectory |
-| Cross-symbol | different symbols, same period | AMZN vs WMT |
-| Single query complex | VWAP, volatility, ATR from kline | — |
-
-### Symbol Variation
-
-| Category | Symbols |
-|----------|---------|
-| Mega-cap tech | AAPL, MSFT, AMZN, NVDA, AVGO |
-| Growth stocks | TSLA, AMD, CRM, NFLX |
-| Value/cyclical | JPM, WMT |
-| Compared pairs | AMZN vs WMT, HD vs COST |
+| Pattern | Example APIs | Use Case |
+|---------|--------------|----------|
+| Price + Financials | `getStockKline` + `getCompanyIncomeStatements` | P/E, PEG |
+| Cross-period | Same API, different `fiscal_year`/`fiscal_quarter` | YoY growth |
+| Cross-symbol | Same API, different symbols | Company comparison |
+| Estimate vs Actual | `getFinancialEstimates` + `getCompanyIncomeStatements` | Beat/miss |
+| Macro + Asset | `getHistoricalEconomicIndicator` + `getCryptoKline` | Event study |
 
 ---
 

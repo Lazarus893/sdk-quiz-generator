@@ -46,8 +46,8 @@ Standard Answer: BA's debt-to-asset ratio for 2025 Q2 was 0.73, calculated from 
 - Never mention APIs, endpoints, or data sources in the question text
 - One API call is enough to answer
 - Answer is a direct lookup or simple extraction from the response
-- Vary symbols/tickers (QQQ, SPY, AAPL, MSFT, TSLA, etc.)
-- Vary query patterns: single value lookup, comparisons, counts, rankings, aggregations
+- Vary symbols/tickers and asset types (stocks, ETFs, crypto, macro indicators)
+- Vary query patterns: date-specific value, financial ratio, yes/no check, existence, period aggregate
 
 ### 2. Complex QA Questions
 Multi-hop queries requiring multiple data points and calculations. Include specific requirements for data selection.
@@ -64,7 +64,7 @@ Standard Answer: Apple's Free Cash Flow per Share for fiscal year 2025 was $6.82
 - Answer requires calculation (growth rate, ratio, comparison, etc.)
 - Must include solution steps: what to extract and what formula to apply
 - Specify data selection criteria clearly (e.g., "use closest date to...", "top N by...")
-- Cover diverse financial concepts: P/E, VWAP, margins, volatility, PEG, ATR, etc.
+- Cover diverse concepts: risk metrics (Sharpe, Sortino, MDD), technicals (RSI, VWAP, ATR), fundamentals (FCF, CAGR, DuPont ROE), trading (position sizing, R/R)
 
 ### 3. Trading Strategy Questions
 Real trading strategies with specific instruments, timeframes, entry/exit rules, and position management. Focus on signal identification, position sizing, and exit timing.
