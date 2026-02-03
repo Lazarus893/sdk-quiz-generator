@@ -4,15 +4,6 @@ A skill for generating test questions with standard answers from SDK documentati
 
 > 📖 For question types, examples, generation workflow, and best practices, see **[SKILL.md](SKILL.md)**
 
-## Gateway Endpoints
-
-| API | Endpoint | Key Params |
-|-----|----------|------------|
-| Kline (OHLCV) | `/api/v1/stocks/kline` | `ticker`, `start_time` (unix), `end_time` (unix), `interval` (1h/1d/1w), `limit` |
-| Financial Estimates | `/api/v1/stocks/financial-estimates` | `symbol`, `fiscal_year`, `fiscal_quarter` (Q1/Q2/Q3/Q4/FY) |
-
-Base URL: `https://data-gateway.prd.space.id`
-
 ## Installation
 
 Place the skill directory under your agent's skill path:
