@@ -157,8 +157,9 @@ If user chooses "mixed", ask for ratio (e.g., "40% easy, 40% medium, 20% hard") 
 
 **Default format:** Markdown with question and standard answer pairs
 
-**Alternative format:**
-- JSON (for integration with quiz platforms or automated grading systems)
+**Alternative format:** JSON (for integration with quiz platforms or automated grading systems)
+
+> 💡 **No OPENAI_API_KEY?** Scripts will still output `question`, `query_params`/`queries`, `sdk_response(s)` with `answer: ""`. Use any LLM to generate answers from the returned data.
 
 Structure:
 ```json
@@ -190,13 +191,10 @@ Ask the user if they need JSON format instead of Markdown.
 
 ## Reference Materials
 
-**Example questions with answers** (in `examples/`):
-- `unit_test_examples.md` - 8 diverse Unit Test examples (ETF country weightings)
-- `complex_qa_examples.md` - Complex QA examples with calculations
+**Examples** (in `examples/`):
+- `unit_test_examples.md` - Unit Test examples
+- `complex_qa_examples.md` - Complex QA examples
 
-**Answer generation pipelines** (in `scripts/`):
-- `PIPELINE.md` - Unit Test + Complex QA pipeline architecture, scripts, field reference
-- `COMPLEX_QA_PIPELINE.md` - Complex QA workflow patterns and guidelines
-- `generate_unit_test_answer.py` - Unit Test answer generation (GPT-5.2)
-- `generate_complex_qa_answer.py` - Complex QA single question (GPT-5.2)
-- `run_complex_qa_batch.py` - Complex QA batch execution (programmatic, no LLM)
+**Pipelines** (in `scripts/`):
+- `PIPELINE.md` - Pipeline architecture, JSON formats, field reference
+- `GUIDELINES.md` - Question generation guidelines and patterns
