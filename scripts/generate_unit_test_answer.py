@@ -98,7 +98,7 @@ def generate_unit_test(
     query_params: Dict[str, Any],
     request_url: str,
     api_key: str,
-    openai_api_key: str
+    openai_api_key: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Generate complete Unit Test with question, params, SDK response, and answer.
@@ -108,7 +108,7 @@ def generate_unit_test(
         query_params: Query parameters for SDK
         request_url: SDK gateway endpoint URL
         api_key: API key for gateway
-        openai_api_key: OpenAI API key for answer generation
+        openai_api_key: OpenAI API key for answer generation (optional)
     
     Returns:
         Complete unit test dictionary
@@ -116,8 +116,11 @@ def generate_unit_test(
     # Step 1: Call gateway
     sdk_response = call_gateway(request_url, api_key, query_params)
     
-    # Step 2: Generate answer with GPT-5.2
-    answer = generate_answer_with_llm(question, sdk_response, openai_api_key)
+    # Step 2: Generate answer with GPT-5.2 or leave empty
+    if openai_api_key:
+        answer = generate_answer_with_llm(question, sdk_response, openai_api_key)
+    else:
+        answer = ""
     
     # Step 3: Return complete unit test
     return {
@@ -157,9 +160,8 @@ def main():
     openai_api_key = os.environ.get("OPENAI_API_KEY")
     
     if not openai_api_key:
-        print("Error: OPENAI_API_KEY environment variable is required", file=sys.stderr)
-        print("Set it with: export OPENAI_API_KEY='sk-...'", file=sys.stderr)
-        sys.exit(1)
+        print("Note: OPENAI_API_KEY not set, answer will be empty.", file=sys.stderr)
+        print("You can generate the answer using an LLM with the question + sdk_response.", file=sys.stderr)
     
     try:
         result = generate_unit_test(question, query_params, request_url, sid_api_key, openai_api_key)
