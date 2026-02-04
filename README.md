@@ -45,7 +45,7 @@ python3 scripts/generate_complex_qa_answer.py batch.json --batch
 python3 scripts/generate_complex_qa_answer.py batch.json --batch --no-llm
 ```
 
-See `scripts/PIPELINE.md` for input JSON format.
+See `references/PIPELINE.md` for input JSON format.
 
 ## Pipeline Architecture
 
@@ -92,12 +92,12 @@ graph LR
 ```
 sdk-quiz-generator/
 ├── SKILL.md                           # Skill definition (question types, workflow)
-├── examples/
+├── references/
 │   ├── unit_test_examples.md          # Unit Test examples
-│   └── complex_qa_examples.md         # Complex QA examples
+│   ├── complex_qa_examples.md         # Complex QA examples
+│   ├── PIPELINE.md                    # Pipeline architecture + JSON formats
+│   └── GUIDELINES.md                  # Question generation guidelines
 └── scripts/
-    ├── PIPELINE.md                    # Pipeline architecture + JSON formats
-    ├── GUIDELINES.md                  # Question generation guidelines
     ├── generate_unit_test_answer.py   # Unit Test answer (LLM)
     ├── generate_complex_qa_answer.py  # Complex QA (single/batch, LLM/programmatic)
     └── sid_gateway_client.py          # Gateway client

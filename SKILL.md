@@ -222,10 +222,9 @@ Ask the user if they need JSON format instead of Markdown.
 
 ## Reference Materials
 
-**Examples** (in `examples/`):
+All reference materials are in the `references/` folder:
+
 - `unit_test_examples.md` - Unit Test examples
 - `complex_qa_examples.md` - Complex QA examples
-
-**Pipelines** (in `scripts/`):
 - `PIPELINE.md` - Pipeline architecture, JSON formats, field reference
 - `GUIDELINES.md` - Question generation guidelines and patterns

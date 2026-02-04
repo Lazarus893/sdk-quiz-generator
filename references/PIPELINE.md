@@ -2,7 +2,7 @@
 
 Answer generation pipelines for Unit Test and Complex QA questions.
 
-> 📖 For question diversity guidelines and patterns, see **[GUIDELINES.md](GUIDELINES.md)**
+> 📖 For question diversity guidelines and patterns, see **[GUIDELINES.md](./GUIDELINES.md)**
 
 ---
 
