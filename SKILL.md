@@ -129,31 +129,21 @@ Present questions in clear, numbered format with standard answers:
 
 ## ⚠️ Core Principles (MUST Follow)
 
+> 📖 **Detailed guidelines with examples:** See [GUIDELINES.md](references/GUIDELINES.md)
+
 ### 1. Questions Must Be Real Financial Problems, NOT API Tests
 
-**❌ Wrong (testing API):**
-- "What is the value of the epsAvg field?"
-- "What does getStockKline return for AAPL?"
+Ask about financial metrics (price, P/E, margin, growth rate), not field names or data structures.
 
-**✅ Correct (real financial question):**
-- "What was Apple's closing price on December 31, 2024?"
-- "What is NVIDIA's expected EPS for fiscal year 2024?"
-
-**Principle:** Ask about financial metrics (price, P/E, margin, growth rate), not field names or data structures.
+- ❌ "What is the value of the epsAvg field?"
+- ✅ "What was Apple's closing price on December 31, 2024?"
 
 ### 2. Time Points Must Be Fixed and Stable
 
-**Use historical data from 2024-2025 and earlier** - this data is finalized and won't change.
+Every question must have a specific, fixed time point. **Use 2024-2025 historical data** to ensure answers don't change.
 
-**❌ Wrong:**
-- "What is Apple's latest stock price?" (changes over time)
-- "What is the current Bitcoin price?" (real-time)
-
-**✅ Correct:**
-- "What was Apple's closing price on June 30, 2024?"
-- "What was Bitcoin's price on January 15, 2024 at UTC 00:00?"
-
-**Principle:** Every question must have a specific, fixed time point to ensure one and only one correct answer.
+- ❌ "What is Apple's latest stock price?"
+- ✅ "What was Apple's closing price on June 30, 2024?"
 
 ---
 
