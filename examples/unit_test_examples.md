@@ -2,107 +2,109 @@
 
 This file demonstrates diverse Unit Test questions with varied symbols and fields.
 
+**Note:** All questions use 2024 historical data to ensure stable, unique answers.
+
 ## Example 1: Largest Value Query (QQQ)
 
-**Question:** What is QQQ's largest country weighting?
+**Question:** As of December 31, 2024, what is QQQ's largest country weighting?
 
 **Query Params:**
 ```json
-{"symbol": "QQQ"}
+{"symbol": "QQQ", "as_of_date": "2024-12-31"}
 ```
 
-**Answer:** United States is QQQ's largest country weighting at 94.66%.
+**Answer:** As of December 31, 2024, United States is QQQ's largest country weighting at 94.66%.
 
 ---
 
 ## Example 2: Specific Field Lookup (SPY)
 
-**Question:** What is the United Kingdom's weight percentage in SPY?
+**Question:** As of December 31, 2024, what is the United Kingdom's weight percentage in SPY?
 
 **Query Params:**
 ```json
-{"symbol": "SPY"}
+{"symbol": "SPY", "as_of_date": "2024-12-31"}
 ```
 
-**Answer:** The United Kingdom's weight percentage in SPY is 1.02%.
+**Answer:** As of December 31, 2024, the United Kingdom's weight percentage in SPY is 1.02%.
 
 ---
 
 ## Example 3: Count Aggregation (IWM)
 
-**Question:** How many countries are represented in IWM's holdings?
+**Question:** As of December 31, 2024, how many countries are represented in IWM's holdings?
 
 **Query Params:**
 ```json
-{"symbol": "IWM"}
+{"symbol": "IWM", "as_of_date": "2024-12-31"}
 ```
 
-**Answer:** IWM's holdings are represented across 7 country categories.
+**Answer:** As of December 31, 2024, IWM's holdings are represented across 7 country categories.
 
 ---
 
 ## Example 4: Top-N Ranking (DIA)
 
-**Question:** What are the top three countries by weighting in DIA?
+**Question:** As of December 31, 2024, what are the top three countries by weighting in DIA?
 
 **Query Params:**
 ```json
-{"symbol": "DIA"}
+{"symbol": "DIA", "as_of_date": "2024-12-31"}
 ```
 
-**Answer:** The top three countries by weighting in DIA are: 1) United States at 98.12%, 2) United Kingdom at 0.95%, and 3) Netherlands at 0.48%.
+**Answer:** As of December 31, 2024, the top three countries by weighting in DIA are: 1) United States at 98.12%, 2) United Kingdom at 0.95%, and 3) Netherlands at 0.48%.
 
 ---
 
 ## Example 5: Comparison Between Values (VTI)
 
-**Question:** What is the difference in weight percentage between Canada and Ireland in VTI?
+**Question:** As of December 31, 2024, what is the difference in weight percentage between Canada and Ireland in VTI?
 
 **Query Params:**
 ```json
-{"symbol": "VTI"}
+{"symbol": "VTI", "as_of_date": "2024-12-31"}
 ```
 
-**Answer:** The difference in weight percentage between Canada (2.15%) and Ireland (0.62%) in VTI is 1.53 percentage points.
+**Answer:** As of December 31, 2024, the difference in weight percentage between Canada (2.15%) and Ireland (0.62%) in VTI is 1.53 percentage points.
 
 ---
 
 ## Example 6: Smallest Value Query (VOO)
 
-**Question:** What is VOO's smallest non-zero country weighting (excluding "Other")?
+**Question:** As of December 31, 2024, what is VOO's smallest non-zero country weighting (excluding "Other")?
 
 **Query Params:**
 ```json
-{"symbol": "VOO"}
+{"symbol": "VOO", "as_of_date": "2024-12-31"}
 ```
 
-**Answer:** VOO's smallest non-zero country weighting (excluding "Other") is Australia at 0.08%.
+**Answer:** As of December 31, 2024, VOO's smallest non-zero country weighting (excluding "Other") is Australia at 0.08%.
 
 ---
 
 ## Example 7: Presence Check (ARKK)
 
-**Question:** Does ARKK have any exposure to Switzerland?
+**Question:** As of December 31, 2024, does ARKK have any exposure to Switzerland?
 
 **Query Params:**
 ```json
-{"symbol": "ARKK"}
+{"symbol": "ARKK", "as_of_date": "2024-12-31"}
 ```
 
-**Answer:** Yes, ARKK has exposure to Switzerland at 0.32% of the portfolio.
+**Answer:** As of December 31, 2024, yes, ARKK has exposure to Switzerland at 0.32% of the portfolio.
 
 ---
 
 ## Example 8: Combined Weight (EEM)
 
-**Question:** What is the combined weight of all Asian countries in EEM?
+**Question:** As of December 31, 2024, what is the combined weight of all Asian countries in EEM?
 
 **Query Params:**
 ```json
-{"symbol": "EEM"}
+{"symbol": "EEM", "as_of_date": "2024-12-31"}
 ```
 
-**Answer:** The combined weight of Asian countries (China, South Korea, Taiwan, India) in EEM is 78.45%.
+**Answer:** As of December 31, 2024, the combined weight of Asian countries (China, South Korea, Taiwan, India) in EEM is 78.45%.
 
 ---
 

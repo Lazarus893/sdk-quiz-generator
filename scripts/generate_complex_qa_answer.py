@@ -30,9 +30,19 @@ HEADERS = {"accept": "application/json", "X-API-Key": API_KEY}
 # =============================================================================
 
 def call_gateway(request_url: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Call SDK gateway and return raw response with full HTTP details.
+    """
     response = requests.get(request_url, headers=HEADERS, params=params)
     response.raise_for_status()
-    return response.json()
+    
+    # Return raw response with full HTTP details
+    return {
+        "request_url": response.url,  # Full URL with query params
+        "status_code": response.status_code,
+        "response_headers": dict(response.headers),
+        "body": response.json()
+    }
 
 
 def call_all_queries(queries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -62,10 +72,12 @@ def generate_answer_llm(
 
     data_context = ""
     for i, (query, resp) in enumerate(zip(queries, sdk_responses)):
+        # Extract body from raw response for LLM context
+        resp_body = resp.get("body", resp)
         data_context += f"\n--- Query {i + 1} ---\n"
         data_context += f"Endpoint: {query['request_url']}\n"
         data_context += f"Parameters: {json.dumps(query.get('params', {}))}\n"
-        data_context += f"Response:\n{json.dumps(resp, indent=2)}\n"
+        data_context += f"Response:\n{json.dumps(resp_body, indent=2)}\n"
 
     solution_text = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(solution_steps))
 
@@ -110,9 +122,9 @@ Instructions:
 
 def solve_q1(responses):
     """Forward P/E Ratio: price_close / epsAvg"""
-    fe = responses[0]["data"][0]
+    fe = responses[0]["body"]["data"][0]
     eps_avg = float(fe["epsAvg"])
-    kline_data = responses[1]["response"]["data"]
+    kline_data = responses[1]["body"]["response"]["data"]
     latest = kline_data[0]
     price_close = latest["price_close"]
     pe = price_close / eps_avg
@@ -125,7 +137,7 @@ def solve_q1(responses):
 
 def solve_q2(responses):
     """VWAP = sum(TP * volume) / sum(volume), TP = (H+L+C)/3"""
-    candles = responses[0]["response"]["data"]
+    candles = responses[0]["body"]["response"]["data"]
     sum_tp_vol = sum((c["price_high"] + c["price_low"] + c["price_close"]) / 3 * c["volume_traded"] for c in candles)
     sum_vol = sum(c["volume_traded"] for c in candles)
     if sum_vol == 0:
@@ -136,7 +148,7 @@ def solve_q2(responses):
 
 def solve_q3(responses):
     """Operating Margin YoY"""
-    fy24, fy25 = responses[0]["data"][0], responses[1]["data"][0]
+    fy24, fy25 = responses[0]["body"]["data"][0], responses[1]["body"]["data"][0]
     margin_24 = float(fy24["ebitAvg"]) / float(fy24["revenueAvg"]) * 100
     margin_25 = float(fy25["ebitAvg"]) / float(fy25["revenueAvg"]) * 100
     change = margin_25 - margin_24
@@ -145,10 +157,10 @@ def solve_q3(responses):
 
 def solve_q4(responses):
     """EPS spread vs price spread"""
-    fe = responses[0]["data"][0]
+    fe = responses[0]["body"]["data"][0]
     eps_high, eps_low, eps_avg = float(fe["epsHigh"]), float(fe["epsLow"]), float(fe["epsAvg"])
     eps_spread = (eps_high - eps_low) / eps_avg * 100
-    candles = responses[1]["response"]["data"]
+    candles = responses[1]["body"]["response"]["data"]
     max_high = max(c["price_high"] for c in candles)
     min_low = min(c["price_low"] for c in candles)
     avg_close = sum(c["price_close"] for c in candles) / len(candles)
@@ -159,7 +171,7 @@ def solve_q4(responses):
 
 def solve_q5(responses):
     """Quarterly EPS growth trajectory"""
-    eps = [(r["data"][0]["fiscalQuarter"], float(r["data"][0]["epsAvg"])) for r in responses]
+    eps = [(r["body"]["data"][0]["fiscalQuarter"], float(r["body"]["data"][0]["epsAvg"])) for r in responses]
     growths = [(eps[i][1] - eps[i-1][1]) / eps[i-1][1] * 100 for i in range(1, len(eps))]
     if all(growths[i] > growths[i-1] for i in range(1, len(growths))):
         trajectory = "accelerating"
@@ -173,7 +185,7 @@ def solve_q5(responses):
 
 def solve_q6(responses):
     """Annualized volatility"""
-    candles = sorted(responses[0]["response"]["data"], key=lambda c: c["time_open"])
+    candles = sorted(responses[0]["body"]["response"]["data"], key=lambda c: c["time_open"])
     closes = [c["price_close"] for c in candles]
     if len(closes) < 2:
         return "Not enough data"
@@ -187,7 +199,7 @@ def solve_q6(responses):
 
 def solve_q7(responses):
     """SGA efficiency comparison"""
-    amzn, wmt = responses[0]["data"][0], responses[1]["data"][0]
+    amzn, wmt = responses[0]["body"]["data"][0], responses[1]["body"]["data"][0]
     amzn_ratio = float(amzn["sgaExpenseAvg"]) / float(amzn["revenueAvg"]) * 100
     wmt_ratio = float(wmt["sgaExpenseAvg"]) / float(wmt["revenueAvg"]) * 100
     more_efficient = "WMT" if wmt_ratio < amzn_ratio else "AMZN"
@@ -196,7 +208,7 @@ def solve_q7(responses):
 
 def solve_q8(responses):
     """Incremental margin"""
-    fy24, fy25 = responses[0]["data"][0], responses[1]["data"][0]
+    fy24, fy25 = responses[0]["body"]["data"][0], responses[1]["body"]["data"][0]
     rev_24, ni_24 = float(fy24["revenueAvg"]), float(fy24["netIncomeAvg"])
     rev_25, ni_25 = float(fy25["revenueAvg"]), float(fy25["netIncomeAvg"])
     inc_margin = (ni_25 - ni_24) / (rev_25 - rev_24) * 100 if rev_25 != rev_24 else 0
@@ -207,7 +219,7 @@ def solve_q8(responses):
 
 def solve_q9(responses):
     """Weekly ATR%"""
-    candles = responses[0]["response"]["data"]
+    candles = responses[0]["body"]["response"]["data"]
     trs = [c["price_high"] - c["price_low"] for c in candles]
     atr = sum(trs) / len(trs)
     avg_close = sum(c["price_close"] for c in candles) / len(candles)
@@ -217,8 +229,8 @@ def solve_q9(responses):
 
 def solve_q10(responses):
     """PEG Ratio"""
-    fy24, fy25 = responses[0]["data"][0], responses[1]["data"][0]
-    kline = responses[2]["response"]["data"]
+    fy24, fy25 = responses[0]["body"]["data"][0], responses[1]["body"]["data"][0]
+    kline = responses[2]["body"]["response"]["data"]
     eps_24, eps_25 = float(fy24["epsAvg"]), float(fy25["epsAvg"])
     growth = (eps_25 - eps_24) / eps_24 * 100
     avg_close = sum(c["price_close"] for c in kline) / len(kline)
@@ -261,7 +273,7 @@ def process_question(q: Dict[str, Any], use_llm: bool = True, skip_llm: bool = F
         "question": q["question"],
         "solution_steps": q["solution_steps"],
         "queries": q["queries"],
-        "sdk_responses": sdk_responses,
+        "sdk_raw_responses": sdk_responses,  # Contains: request_url, status_code, response_headers, body
         "answer": answer
     }
     # Preserve extra fields

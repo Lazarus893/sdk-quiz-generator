@@ -13,7 +13,12 @@ Output:
 {
   "question": "...",
   "query_params": {...},
-  "sdk_response": {...},
+  "sdk_raw_response": {
+    "request_url": "...",      // Full URL with query params
+    "status_code": 200,        // HTTP status code
+    "response_headers": {...}, // HTTP response headers
+    "body": {...}              // Actual SDK response data
+  },
   "answer": "..."
 }
 """
@@ -34,7 +39,7 @@ def call_gateway(request_url: str, api_key: str, query_params: Dict[str, Any]) -
         query_params: Query parameters to send
     
     Returns:
-        SDK raw response
+        SDK raw response with full HTTP details
     """
     headers = {
         "accept": "application/json",
@@ -44,7 +49,13 @@ def call_gateway(request_url: str, api_key: str, query_params: Dict[str, Any]) -
     response = requests.get(request_url, headers=headers, params=query_params)
     response.raise_for_status()
     
-    return response.json()
+    # Return raw response with full HTTP details
+    return {
+        "request_url": response.url,  # Full URL with query params
+        "status_code": response.status_code,
+        "response_headers": dict(response.headers),
+        "body": response.json()
+    }
 
 
 def generate_answer_with_llm(question: str, sdk_response: Dict[str, Any], openai_api_key: str) -> str:
@@ -53,7 +64,7 @@ def generate_answer_with_llm(question: str, sdk_response: Dict[str, Any], openai
     
     Args:
         question: The natural language question
-        sdk_response: Raw SDK response
+        sdk_response: Raw SDK response (contains body with actual data)
         openai_api_key: OpenAI API key
     
     Returns:
@@ -65,12 +76,15 @@ def generate_answer_with_llm(question: str, sdk_response: Dict[str, Any], openai
         "Content-Type": "application/json"
     }
     
+    # Use the body for LLM context (the actual response data)
+    response_body = sdk_response.get("body", sdk_response)
+    
     prompt = f"""You are answering a financial data question based on SDK response data.
 
 Question: {question}
 
 SDK Response:
-{json.dumps(sdk_response, indent=2)}
+{json.dumps(response_body, indent=2)}
 
 Provide a clear, concise natural language answer to the question based on the SDK response data. Include specific numbers and details from the response."""
     
@@ -126,7 +140,7 @@ def generate_unit_test(
     return {
         "question": question,
         "query_params": query_params,
-        "sdk_response": sdk_response,
+        "sdk_raw_response": sdk_response,  # Contains: request_url, status_code, response_headers, body
         "answer": answer
     }
 

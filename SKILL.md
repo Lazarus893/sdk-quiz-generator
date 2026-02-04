@@ -37,9 +37,9 @@ Single-point data queries asking for specific metrics or values. Do NOT mention 
 
 **Example:**
 ```
-Q: What is BA's debt-to-asset ratio based on 2025 Q2 earnings?
+Q: What is BA's debt-to-asset ratio based on 2024 Q2 earnings?
 
-Standard Answer: BA's debt-to-asset ratio for 2025 Q2 was 0.73, calculated from total debt of $58.2B divided by total assets of $79.8B as reported in their Q2 2025 earnings.
+Standard Answer: BA's debt-to-asset ratio for 2024 Q2 was 0.73, calculated from total debt of $58.2B divided by total assets of $79.8B as reported in their Q2 2024 earnings.
 ```
 
 **Key rules:**
@@ -54,9 +54,9 @@ Multi-hop queries requiring multiple data points and calculations. Include speci
 
 **Example:**
 ```
-Q: What was Apple's Free Cash Flow per Share for fiscal year 2025? Outstanding shares count should use the closest to its fiscal year-end date (September 30, 2025).
+Q: What was Apple's Free Cash Flow per Share for fiscal year 2024? Outstanding shares count should use the closest to its fiscal year-end date (September 30, 2024).
 
-Standard Answer: Apple's Free Cash Flow per Share for fiscal year 2025 was $6.82. This is calculated by dividing the Free Cash Flow of $108.5B by the outstanding shares count of 15.9B as of September 30, 2025 (the closest date to fiscal year-end).
+Standard Answer: Apple's Free Cash Flow per Share for fiscal year 2024 was $6.82. This is calculated by dividing the Free Cash Flow of $108.5B by the outstanding shares count of 15.9B as of September 30, 2024 (the closest date to fiscal year-end).
 ```
 
 **Key rules:**
@@ -71,12 +71,12 @@ Real trading strategies with specific instruments, timeframes, entry/exit rules,
 
 **Example:**
 ```
-Q: Using BTCUSDT Perpetual Futures (Binance, UTC, 2025-11-10 to 2025-11-20): identify all days where Binance's BTCUSDT long/short ratio closes above 2. At the daily close of such days, open a 100% short position. Exit after 24 hours.
+Q: Using BTCUSDT Perpetual Futures (Binance, UTC, 2024-11-10 to 2024-11-20): identify all days where Binance's BTCUSDT long/short ratio closes above 2. At the daily close of such days, open a 100% short position. Exit after 24 hours.
 
-Standard Answer: During the specified period, the long/short ratio closed above 2 on 2025-11-12 (2.15), 2025-11-15 (2.31), and 2025-11-18 (2.08).
-- Trade 1: Short at daily close 2025-11-12 23:59 UTC ($89,432), exit 2025-11-13 23:59 UTC ($87,210), profit: +2.48%
-- Trade 2: Short at daily close 2025-11-15 23:59 UTC ($91,820), exit 2025-11-16 23:59 UTC ($90,105), profit: +1.87%
-- Trade 3: Short at daily close 2025-11-18 23:59 UTC ($93,015), exit 2025-11-19 23:59 UTC ($94,330), loss: -1.41%
+Standard Answer: During the specified period, the long/short ratio closed above 2 on 2024-11-12 (2.15), 2024-11-15 (2.31), and 2024-11-18 (2.08).
+- Trade 1: Short at daily close 2024-11-12 23:59 UTC ($89,432), exit 2024-11-13 23:59 UTC ($87,210), profit: +2.48%
+- Trade 2: Short at daily close 2024-11-15 23:59 UTC ($91,820), exit 2024-11-16 23:59 UTC ($90,105), profit: +1.87%
+- Trade 3: Short at daily close 2024-11-18 23:59 UTC ($93,015), exit 2024-11-19 23:59 UTC ($94,330), loss: -1.41%
 Total strategy return: +2.94% over 3 trades.
 ```
 
@@ -127,6 +127,36 @@ Present questions in clear, numbered format with standard answers:
 ---
 ```
 
+## ⚠️ Core Principles (MUST Follow)
+
+### 1. Questions Must Be Real Financial Problems, NOT API Tests
+
+**❌ Wrong (testing API):**
+- "What is the value of the epsAvg field?"
+- "What does getStockKline return for AAPL?"
+
+**✅ Correct (real financial question):**
+- "What was Apple's closing price on December 31, 2024?"
+- "What is NVIDIA's expected EPS for fiscal year 2024?"
+
+**Principle:** Ask about financial metrics (price, P/E, margin, growth rate), not field names or data structures.
+
+### 2. Time Points Must Be Fixed and Stable
+
+**Use historical data from 2024-2025 and earlier** - this data is finalized and won't change.
+
+**❌ Wrong:**
+- "What is Apple's latest stock price?" (changes over time)
+- "What is the current Bitcoin price?" (real-time)
+
+**✅ Correct:**
+- "What was Apple's closing price on June 30, 2024?"
+- "What was Bitcoin's price on January 15, 2024 at UTC 00:00?"
+
+**Principle:** Every question must have a specific, fixed time point to ensure one and only one correct answer.
+
+---
+
 ## Best Practices
 
 **Question Quality:**
@@ -135,6 +165,7 @@ Present questions in clear, numbered format with standard answers:
 - **Trading Strategy**: Include specific instruments, exchanges, timeframes, entry signals, position size, and exit rules
 - Provide complete standard answers with concrete numbers and step-by-step calculations
 - Use realistic data and actual market scenarios
+- **Always use 2024-2025 historical data** to ensure answer stability
 
 **Difficulty Levels:**
 
